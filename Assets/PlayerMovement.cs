@@ -8,7 +8,11 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Movement Controls")]
     public float SprintSpeed;
-   
+    public float RateOfGravity = -50;
+    public float InitialJumpVelocity = 25f;
+    public float FallMultiplier = 2.0f;
+    public float LetGoMultiplier = 3.0f;
+
     [Header("Editor Refrences")]
     public Transform Camera;
     public Transform GroundCheck;
@@ -18,16 +22,14 @@ public class PlayerMovement : MonoBehaviour
 
     private InputMaster InputController;
     private CharacterController Character;
-    
+
     private float TurnSpeed = 0.1f;
-
-    private float RateOfGravity = -9.81f;
     private Vector3 Velocity;
-
     private float GroundCheckDistance = 0.4f;
     private bool IsGrounded;
+    private bool HoldingJump;
+    private bool AlreadyLetGo;
 
-    private float JumpHeight = 3f;
 
     // Refrences
 
@@ -43,6 +45,7 @@ public class PlayerMovement : MonoBehaviour
         Character = GetComponent<CharacterController>();
 
         Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Confined;
     }
 
     private void Update()
@@ -51,9 +54,10 @@ public class PlayerMovement : MonoBehaviour
         IsGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
 
         // If On Ground, Stop Player
-        if(IsGrounded && Velocity.y < 0)
+        if (IsGrounded && Velocity.y < 0)
         {
             Velocity.y = -2f;
+            AlreadyLetGo = false;
         }
 
         var UserInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
@@ -70,16 +74,37 @@ public class PlayerMovement : MonoBehaviour
             Character.Move(Direction.normalized * SprintSpeed * Time.deltaTime);
         }
 
+        // Jump
         var JumpInput = InputController.Player.Jump.ReadValue<float>();
 
-        if (JumpInput == 1f && IsGrounded)
+
+        if (JumpInput == 1f && IsGrounded && HoldingJump == false)
         {
-            Velocity.y = Mathf.Sqrt(-2f * RateOfGravity * JumpHeight);
+            if (Velocity.y < InitialJumpVelocity)
+            {
+                Velocity.y = InitialJumpVelocity;
+            }
         }
 
+        var VelocityChange = RateOfGravity * Time.deltaTime;
+
+        if ((JumpInput == 0f && Velocity.y > InitialJumpVelocity / 2) || AlreadyLetGo)
+        {
+            VelocityChange *= LetGoMultiplier;
+            AlreadyLetGo = true;
+        }
+        else
+        {
+            if (Velocity.y < InitialJumpVelocity / 2)
+            {
+                VelocityChange *= FallMultiplier;
+            }
+        }
+
+        HoldingJump = JumpInput == 1f;
 
         // Gravity Movement
-        Velocity.y += RateOfGravity * Time.deltaTime;
+        Velocity.y += VelocityChange;
 
         Character.Move(Velocity * Time.deltaTime);
     }
