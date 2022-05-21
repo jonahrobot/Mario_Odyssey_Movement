@@ -16,7 +16,11 @@ public class PlayerMovement : MonoBehaviour
     public float InitialJumpVelocity = 25f;
     public float FallMultiplier = 2.0f;
     public float LetGoMultiplier = 3.0f;
-
+    private float CurrentGroundPoundMultiplier = 4.0f;
+    public float GroundPoundMultiplierEnd = 8.0f;
+    private bool GroundPoundTriggered = false;
+    private bool GroundPoundActive = false;
+    
     [Header("Editor Refrences")]
     public Transform Camera;
     public Transform GroundCheck;
@@ -40,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
     private float CurrentJumpHeight = 0;
 
     private Coroutine Reset = null;
+    private Coroutine GroundPound = null;
 
     // Refrences
 
@@ -78,6 +83,16 @@ public class PlayerMovement : MonoBehaviour
         {
             Velocity.y = -2f;
             AlreadyLetGo = false;
+
+            CurrentGroundPoundMultiplier = 4.0f;
+            GroundPoundTriggered = false;
+            GroundPoundActive = false;
+
+            if(GroundPound != null)
+            {
+                StopCoroutine(GroundPound);
+                GroundPound = null;
+            }
 
             // Only reset jump when coming back to ground, not while still on ground and jump was triggered!
             if (JumpLeftGround)
@@ -154,9 +169,23 @@ public class PlayerMovement : MonoBehaviour
 
     // ** Jumping **
 
+    IEnumerator GroundPoundDelay()
+    {
+        GroundPound = null;
+        yield return new WaitForSeconds(0.2f);
+        GroundPoundActive = true;
+        
+    }
+
     private void JumpHandler()
     {
         var JumpInput = InputController.Player.Jump.ReadValue<float>();
+        var GroundPoundInput = InputController.Player.GroundPound.ReadValue<float>();
+        if(GroundPoundInput == 1f && GroundPoundTriggered == false)
+        {
+            GroundPound = StartCoroutine(GroundPoundDelay());
+            GroundPoundTriggered = true;
+        }
 
         // Only jump when on ground and not holding jump button from previous jump
         if (JumpInput == 1f && IsGrounded && HoldingJump == false)
@@ -193,7 +222,9 @@ public class PlayerMovement : MonoBehaviour
 
         // Default Velocity Change
         var VelocityChange = RateOfGravity * Time.deltaTime;
-
+        if (GroundPoundTriggered && !GroundPoundActive) {
+            VelocityChange = 0f;
+        }
         // Increase Falling Velocity
         if ((JumpInput == 0f && Velocity.y > CurrentJumpHeight / 2) || AlreadyLetGo)
         {
@@ -210,6 +241,16 @@ public class PlayerMovement : MonoBehaviour
             if (Velocity.y < CurrentJumpHeight / 2)
             {
                 VelocityChange *= FallMultiplier;
+            }
+        }
+
+        if (GroundPoundActive == true)
+        {
+            
+            VelocityChange *= CurrentGroundPoundMultiplier;
+            if(CurrentGroundPoundMultiplier < GroundPoundMultiplierEnd)
+            {
+                CurrentGroundPoundMultiplier += 0.05f;
             }
         }
 
