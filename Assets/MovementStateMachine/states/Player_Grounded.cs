@@ -20,12 +20,14 @@ public class Player_Grounded : Player_State
 
     public override void StartMethod()
     {
-        //print("Grounded");
-        core.Velocity.y = -2f;
+        //Debug.Log("This Triggers twice on jump" + "  " + Time.deltaTime);
+        core.Velocity = new Vector3(0f,-2f,0f);
+        Debug.Log("THIS IS THE PROBLEM 2");
     }
 
     public override void UpdateMethod()
     {
         //print("Grounded");
+       
     }
 }

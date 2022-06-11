@@ -11,6 +11,7 @@ public class Player_Jumping : Player_State
     private float InitialJumpVelocity = 25f; // Jumping
     private float FallMultiplier = 2.0f; // Jumping
     private float LetGoMultiplier = 3.0f; // Jumping
+    private bool setup;
     private Coroutine Reset;
     private bool doingFinalJump;
 
@@ -24,12 +25,15 @@ public class Player_Jumping : Player_State
         //print("JUMP!");
         doingFinalJump = false;
         AlreadyLetGo = false;
+        setup = false;
     }
 
     public override void StartMethod()
     {
         //print("JUMP!");
-        
+        core.DisableGroundCheck = true;
+        setup = false;
+
     }
 
     public override void UpdateMethod()
@@ -41,7 +45,7 @@ public class Player_Jumping : Player_State
             core.AbleToTripleJump = false;
         }
         
-        if (core.jumpInput == 1f && core.isGrounded && HoldingJump == false)
+        if (core.jumpInput == 1f && core.isGrounded && setup == false) //  && HoldingJump == false
         {
             if (core.Velocity.y < InitialJumpVelocity)
             {
@@ -82,7 +86,8 @@ public class Player_Jumping : Player_State
                     core.animator.SetBool("jumpAnimation", true);
                     CurrentJumpHeight = 35f;
                 }
-
+                setup = true;
+                Debug.Log("This Triggers!");
                 core.Velocity.y = CurrentJumpHeight;
 
                 if (core.JumpCombo > 2)
@@ -107,8 +112,13 @@ public class Player_Jumping : Player_State
             if (core.Velocity.y < CurrentJumpHeight * 0.75f)
             {
                 core.VelocityChange *= LetGoMultiplier;
+                if (core.DisableGroundCheck == true)
+                {
+                    Debug.Log("FAILSAFE 1 FIRES WAY TO EARLY!");
+                    core.DisableGroundCheck = false;
+                }
             }
-            
+           
             AlreadyLetGo = true;
         }
         else
@@ -117,14 +127,13 @@ public class Player_Jumping : Player_State
             if (core.Velocity.y < CurrentJumpHeight / 2)
             {
                 core.VelocityChange *= FallMultiplier;
-               
+                if (core.DisableGroundCheck == true)
+                {
+                    Debug.Log("FAILSAFE 2 FIRES WAY TO EARLY!  " + CurrentJumpHeight +  "  " + core.Velocity.y);
+                    core.DisableGroundCheck = false;
+                }
             }
         }
-
-     
-
-        // Handles Ghosting Jump Button
-        HoldingJump = core.jumpInput == 1f;
     }
 
 

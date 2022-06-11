@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-struct State{   
+struct State
+{
     public enum State_Types { IDLE, RUN, GROUND, JUMP }
 
     State_Types currentStateTag;
@@ -45,7 +46,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     private State sIdle;
     private State sRunning;
 
-    
+
     private State sA;
     private State sB;
 
@@ -59,27 +60,33 @@ public class PlayerStateMachineCore : MonoBehaviour
     public Transform GroundCheck;
     public LayerMask GroundMask;
     public GameObject Head;
-    public Animator animator; 
+    public Animator animator;
 
     [HideInInspector] public InputMaster InputController;
     [HideInInspector] public CharacterController Character;
 
     // Shared Variables 
 
-    [HideInInspector] public float VelocityChange;
+    public float VelocityChange;
     [HideInInspector] public float RateOfGravity = -50f;
-    [HideInInspector] public Vector3 Velocity;
+    public Vector3 Velocity;
 
     // Variables saved between jumps
     [HideInInspector] public int JumpCombo = 1;
-    [HideInInspector] public bool AbleToTripleJump = true; 
+    [HideInInspector] public bool AbleToTripleJump = true;
 
 
     // Private Variables
 
     float GroundCheckDistance = 0.4f;
     bool leftGround = false;
+    bool ableToGround = true;
+
+    bool holdingJump = false;
+
     bool jumpCoolDown = false;
+
+     public bool DisableGroundCheck;
 
     Coroutine reset = null;
 
@@ -121,25 +128,35 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void Update()
     {
-        //Debug.Log("****************");
-        //Debug.Log("State A: " + sA.getStateAsString());
-        //Debug.Log("State B: " + sB.getStateAsString());
- 
-
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
         jumpInput = InputController.Player.Jump.ReadValue<float>();
-        isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
 
-        if (!isGrounded)
+            isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
+
+        if( jumpInput == 0f)
         {
-            leftGround = true;
+            holdingJump = false;
         }
 
-        if(isGrounded && sB != "GROUND" && leftGround == true)
-        { 
+        if (jumpInput == 1f && sB == "GROUND" && holdingJump == false)
+        {
+            if (reset != null)
+            {
+                StopCoroutine(reset);
+                reset = null;
+            }
+            Debug.Log("Swapped to Jumping!");
+            sB = switchState(sB, sJumping);
+            DisableGroundCheck = true;
+            holdingJump = true;
+        }
+
+        if (isGrounded && sB != "GROUND" && DisableGroundCheck == false)
+        {
+            Debug.Log("OOOP SWAPPED to GROUNDED LMAO!");
             reset = StartCoroutine(ResetJumpCount());
             sB = switchState(sB, sGrounded);
-            leftGround = false;
+
         }
 
         if (movementInput.magnitude >= 0.1f && (sA == "IDLE") && sA != "RUN")
@@ -147,15 +164,7 @@ public class PlayerStateMachineCore : MonoBehaviour
             sA = switchState(sA, sRunning);
         }
 
-        if(jumpInput == 1f && sB == "GROUND")
-        {
-            if (reset != null)
-            {
-                StopCoroutine(reset);
-                reset = null;
-            }
-            sB = switchState(sB, sJumping);
-        }
+     
 
         if (movementInput.magnitude < 0.1f && sA == "RUN" && sA != "IDLE")
         {
@@ -165,16 +174,19 @@ public class PlayerStateMachineCore : MonoBehaviour
         // Run Scripts and Adjust Gravity
 
         VelocityChange = RateOfGravity * Time.deltaTime;
-        
-        
+
+
         sA.getScript().UpdateMethod();
         var test = VelocityChange;
         sB.getScript().UpdateMethod();
-        if (test == VelocityChange)
+
+        if (isGrounded && jumpInput == 0f && DisableGroundCheck == false)
         {
-            Debug.Log(sB.getStateAsString());
+            Debug.Log("THIS IS THE PROBLEM 1");
+            Velocity.y = -2f;
+        }else{
+            Velocity.y += VelocityChange;
         }
-        Velocity.y += VelocityChange;
         Character.Move(Velocity * Time.deltaTime);
     }
 
