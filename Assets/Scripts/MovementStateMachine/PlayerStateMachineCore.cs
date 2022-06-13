@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 // Data type for each state in player movement state machine.
-struct State
+public struct State
 {
     public enum State_Types { IDLE, RUN, GROUND, JUMP }
 
@@ -48,8 +48,8 @@ public class PlayerStateMachineCore : MonoBehaviour
     private State sRunning;
 
     // Core State Trackers 
-    private State sA; // ( Idle, Running )
-    private State sB; // ( Grounded, Jumping )
+    public State sA; // ( Idle, Running )
+    public State sB; // ( Grounded, Jumping )
 
     // User Inputs
     public Vector2 movementInput;
