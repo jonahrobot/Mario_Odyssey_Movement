@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player_Ground_Pound : Player_State
+public class Player_Crouch : Player_State
 {
     PlayerStateMachineCore core;
 
-    public Player_Ground_Pound(PlayerStateMachineCore core)
+    public Player_Crouch(PlayerStateMachineCore core)
     {
         this.core = core;
     }

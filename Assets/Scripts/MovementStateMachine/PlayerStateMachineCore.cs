@@ -156,7 +156,7 @@ public class PlayerStateMachineCore : MonoBehaviour
             sA = switchState(sA, sIdle);
         }
 
-        // Run Scripts and Adjust Gravity
+        /// Run Scripts and Adjust Gravity
 
         VelocityChange = RateOfGravity * Time.deltaTime;
 
@@ -174,6 +174,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         Character.Move(Velocity * Time.deltaTime);
     }
 
+    /// Helper Methods
 
     // Swap States
     private State switchState(State c, State newState)

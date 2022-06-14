@@ -66,7 +66,7 @@ public class Player_Jumping : Player_State
                     core.AbleToTripleJump = true;
                 }
 
-                // Handle each stage of jumping
+                /// Handle each stage of jumping
                 core.JumpCombo += 1;
 
                 if (core.JumpCombo == 1)

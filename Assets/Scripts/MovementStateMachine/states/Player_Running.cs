@@ -4,17 +4,20 @@ using UnityEngine;
 
 public class Player_Running : Player_State
 {
-    PlayerStateMachineCore core;
-    float turnSmoothVelocity;
-
+    // Adjustable Stats
     private float BaseSprintSpeed = 15f;
-    private float MaxSprintSpeed = 25f;  
-    private float MaxSprintSpeedOriginal = 25f;
-    private float SprintAcceleration = 1.00125f; 
-    private float CurrentSprintSpeed;
+    private float DefaultMaxSprintSpeed = 25f;
+
+    // Constants
+    private float SprintAcceleration = 1.00125f;
     private float TurnSpeed = 0.1f;
 
+    // References and Trackers
+    PlayerStateMachineCore core;
 
+    float turnSmoothVelocity;
+    float CurrentSprintSpeed;
+    float MaxSprintSpeed;
 
     public Player_Running(PlayerStateMachineCore core)
     {
@@ -23,45 +26,20 @@ public class Player_Running : Player_State
 
     public override void ExitMethod()
     {
-        //print("Stopped Running");
         CurrentSprintSpeed = BaseSprintSpeed;
+        MaxSprintSpeed = DefaultMaxSprintSpeed;
     }
 
     public override void StartMethod()
     {
-        //print("Running");
         CurrentSprintSpeed = BaseSprintSpeed;
+        MaxSprintSpeed = DefaultMaxSprintSpeed;
     }
 
     public override void UpdateMethod()
     {
-        Debug.Log(CurrentSprintSpeed);
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-
-        // Removed slow down thing
-        /*
-                    // Set Angles into range of 0-360
-
-                    var TargetRefined = TargetAngle % 360;
-                    if (TargetRefined < 0) { TargetRefined += 360; }
-
-                    var CurrentRefined = CurrentAngle % 360;
-                    if (CurrentRefined < 0) { CurrentRefined += 360; }
-
-                    var DifferenceChange = 180;
-                    if (CurrentSprintSpeed < MaxSprintSpeed * 0.75)
-                    {
-                        DifferenceChange = 20;
-                    }
-
-                    // Slow Player on Quick Direction Switch
-
-                    if (Mathf.Abs(TargetRefined - CurrentRefined) > DifferenceChange)
-                    {
-                    CurrentSprintSpeed = Mathf.Max(CurrentSprintSpeed * 0.5f, BaseSprintSpeed);
-                    }
-        */
        
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
 
@@ -74,6 +52,7 @@ public class Player_Running : Player_State
         }
         else
         {
+            // If current speed higher than max, slow player down!
             CurrentSprintSpeed /= SprintAcceleration;
         }
 
@@ -82,52 +61,41 @@ public class Player_Running : Player_State
         core.Character.Move(Direction.normalized * CurrentSprintSpeed * Time.deltaTime);
     }
 
+    // If player on slope, adjust running speed
     private Vector3 SlopeFix(Vector3 v, Vector3 pos)
     {
+
         var raycast = new Ray(pos, Vector3.down);
    
         if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
         {
-            // Get normal
             var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
 
             var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
+            
+            /// Adjust for steepness of slopes
 
-            Debug.DrawLine(hitInfo.point + hitInfo.normal, hitInfo.point, Color.cyan);
-
-            if (adjustVel.y < -0.2f)
-            {
-                Debug.Log("Running Down Hill");
-
+            if (adjustVel.y < -0.2f) // Player Running Down Hill
+            { 
                 SprintAcceleration = 1.00125f + 0.00125f;
-                MaxSprintSpeed = MaxSprintSpeedOriginal + 8f;
+                MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
 
-                // Dont apply adjustment if your jumping down the hill. When jumping up hill you need the adjustment!
-                if (core.sB != "JUMP")
-                {
-                    return adjustVel;
-                }
+                // Don't adjust angle if jumping down hill.
+                if (core.sB != "JUMP") { return adjustVel; }
             }
-            else
+            else if (adjustVel.y > 0.2f) // Player Running Up Hill
             {
-                if (adjustVel.y > 0.2f)
-                {
-                    Debug.Log("Running UP THE HILL");
-                    MaxSprintSpeed = MaxSprintSpeedOriginal - 4f;
-
-                    return adjustVel;
-                }
-                else
-                {
-                    Debug.Log("At flat ground");
-
-                    SprintAcceleration = 1.00125f;
-                    MaxSprintSpeed = MaxSprintSpeedOriginal;
-
-                }
+                MaxSprintSpeed = DefaultMaxSprintSpeed - 4f;
+                return adjustVel;
+            }
+            else // At Flat Ground
+            {
+                SprintAcceleration = 1.00125f;
+                MaxSprintSpeed = DefaultMaxSprintSpeed;
             }
         }
-        return v;
 
+        // If no adjustments made, return the old velocity
+        return v;
     }
 }
