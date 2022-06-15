@@ -99,7 +99,7 @@ public class Player_Jumping : Player_State
 
                 if (Reset != null)
                 {
-                    StopCoroutine(Reset);
+                    core.StopCoroutine(Reset);
                 }
             }
         }

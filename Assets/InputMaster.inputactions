@@ -24,7 +24,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "GroundPound",
+                    "name": "Crouch",
                     "type": "PassThrough",
                     "id": "1b1b4a3c-56aa-485a-ada8-d346e4e6f050",
                     "expectedControlType": "Button",
@@ -107,7 +107,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "GroundPound",
+                    "action": "Crouch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

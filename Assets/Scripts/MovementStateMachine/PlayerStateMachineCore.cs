@@ -6,7 +6,7 @@ using UnityEngine;
 // Data type for each state in player movement state machine.
 public struct State
 {
-    public enum State_Types { IDLE, RUN, GROUND, JUMP }
+    public enum State_Types { IDLE, RUN, GROUND, JUMP, CROUCH, CROUCHJUMP, GROUNDPOUND }
 
     State_Types currentStateTag;
     Player_State scriptReference;
@@ -46,15 +46,19 @@ public class PlayerStateMachineCore : MonoBehaviour
     private State sGrounded;
     private State sIdle;
     private State sRunning;
+    private State sCrouch;
+    private State sCrouchJump;
+    private State sGroundPound;
 
     // Core State Trackers 
-    public State sA; // ( Idle, Running )
-    public State sB; // ( Grounded, Jumping )
+    public State sA; // ( Idle, Running, Crouch)
+    public State sB; // ( Grounded, Jumping, Crouch Jump, Ground Pound )
 
     // User Inputs
     public Vector2 movementInput;
     public float jumpInput;
     public bool isGrounded;
+    public float isCrouching;
 
     // Component Referencing
     public Transform Camera;
@@ -77,11 +81,14 @@ public class PlayerStateMachineCore : MonoBehaviour
     [HideInInspector] public int JumpCombo = 1;
     [HideInInspector] public bool AbleToTripleJump = true;
 
+    // IEnumerator trackers, states depend on Core for IEnumerators
+    [HideInInspector] public bool GroundPoundFall = false;
 
     // Private Variables
     float GroundCheckDistance = 0.4f;
     bool holdingJump = false;
     Coroutine reset = null;
+    bool delayedGroundPoundFlip = false;
 
 
     private void Awake()
@@ -92,6 +99,9 @@ public class PlayerStateMachineCore : MonoBehaviour
         sGrounded = new State(State.State_Types.GROUND, new Player_Grounded(this));
         sIdle = new State(State.State_Types.IDLE, new Player_Idle(this));
         sRunning = new State(State.State_Types.RUN, new Player_Running(this));
+        sCrouch = new State(State.State_Types.CROUCH, new Player_Crouch(this));
+        sCrouchJump = new State(State.State_Types.CROUCHJUMP, new Player_CrouchJump(this));
+        sGroundPound = new State(State.State_Types.GROUNDPOUND, new Player_GroundPound(this));
 
         sA = sIdle;
         sB = sGrounded;
@@ -113,9 +123,13 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void Update()
     {
+        /// Input Tracking
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
         jumpInput = InputController.Player.Jump.ReadValue<float>();
+        isCrouching = InputController.Player.Crouch.ReadValue<float>();
+
         isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
+        
 
         // holdingJump prevents repeated ghost jumps
         if (jumpInput == 0f) { holdingJump = false; }
@@ -124,7 +138,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         /// State Triggers
 
         // Jumping (sB)
-        if (jumpInput == 1f && sB == "GROUND" && holdingJump == false)
+        if (jumpInput == 1f && sB == "GROUND" && sA != "CROUCH" && holdingJump == false )
         {
             if (reset != null)
             {
@@ -137,6 +151,8 @@ public class PlayerStateMachineCore : MonoBehaviour
             holdingJump = true;
         }
 
+        /// sB
+
         // Grounded (sB)
         if (isGrounded && sB != "GROUND" && DisableGroundCheck == false)
         {
@@ -144,17 +160,43 @@ public class PlayerStateMachineCore : MonoBehaviour
             sB = switchState(sB, sGrounded);
         }
 
+        // Crouch Jump (sB)
+        if (isCrouching == 1f && jumpInput == 1f && sB == "GROUND" && sA == "CROUCH" && holdingJump == false)
+        {
+            DisableGroundCheck = true;
+            holdingJump = true;
+            sB = switchState(sB, sCrouchJump);
+        }
+
+        // Ground Pound (sB)
+        if(isCrouching == 1f && sB == "JUMP" && sB != "GROUNDPOUND")
+        {
+            sB = switchState(sB, sGroundPound);
+            sA = switchState(sA, sIdle); // Can't move while GroundPounding
+        }
+
+        /// sA
+
         // Running (sA)
-        if (movementInput.magnitude >= 0.1f && (sA == "IDLE") && sA != "RUN")
+        if (isCrouching == 0f && movementInput.magnitude >= 0.1f && (sA == "IDLE" || sA == "CROUCH") && sA != "RUN" && sB != "CROUCHJUMP" && sB != "GROUNDPOUND")
         {
             sA = switchState(sA, sRunning);
         }
 
         // Idle (sA)
-        if (movementInput.magnitude < 0.1f && sA == "RUN" && sA != "IDLE")
+        if (isCrouching == 0f && movementInput.magnitude < 0.1f && (sA == "RUN" || sA == "CROUCH") && sA != "IDLE")
         {
             sA = switchState(sA, sIdle);
         }
+
+        // Crouching (sA)
+        if (isCrouching == 1f && sB == "GROUND")
+        {
+            sA = switchState(sA, sCrouch);
+        }
+
+      
+
 
         /// Run Scripts and Adjust Gravity
 
@@ -172,6 +214,16 @@ public class PlayerStateMachineCore : MonoBehaviour
         }
 
         Character.Move(Velocity * Time.deltaTime);
+
+        /// Ground Pound Animation Handler
+        if (delayedGroundPoundFlip)
+        {
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false && GroundPoundFall == false)
+            {
+                delayedGroundPoundFlip = false;
+                animator.SetBool("jumpAnimation", true);
+            }
+        }
     }
 
     /// Helper Methods
@@ -190,5 +242,22 @@ public class PlayerStateMachineCore : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         JumpCombo = 0;
         Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.white);
+    }
+
+    // Delay Ground Pound
+    IEnumerator GroundPoundDelay()
+    {
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false)
+        {
+            animator.SetBool("jumpAnimation", true);
+        }
+        else
+        {
+            delayedGroundPoundFlip = true;
+        }
+        animator.speed *= 2;
+        yield return new WaitForSeconds(0.3f);
+        GroundPoundFall = true;
+        animator.speed = 1;
     }
 }

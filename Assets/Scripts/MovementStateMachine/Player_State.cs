@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Player_State : MonoBehaviour
+public abstract class Player_State
 {
     public abstract void StartMethod();
     public abstract void UpdateMethod();

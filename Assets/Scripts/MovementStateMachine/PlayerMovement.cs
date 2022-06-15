@@ -180,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
     private void JumpHandler()
     {
         var JumpInput = InputController.Player.Jump.ReadValue<float>();
-        var GroundPoundInput = InputController.Player.GroundPound.ReadValue<float>();
+        var GroundPoundInput = InputController.Player.Crouch.ReadValue<float>();
         if(GroundPoundInput == 1f && GroundPoundTriggered == false)
         {
             GroundPound = StartCoroutine(GroundPoundDelay());
