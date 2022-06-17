@@ -69,6 +69,11 @@ public class Player_Jumping : Player_State
                 /// Handle each stage of jumping
                 core.JumpCombo += 1;
 
+                if (core.postGroundPoundJumpPossible)
+                {
+                    core.JumpCombo = 3;
+                }
+
                 if (core.JumpCombo == 1)
                 {
                     core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.blue);

@@ -2,24 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player_CrouchJump : Player_State
+public class Player_Long_Jump : Player_State
 {
     PlayerStateMachineCore core;
 
     // Stats
     private float CurrentJumpHeight = 0;
-    private float JumpVelocity = 32f;
+    private float JumpVelocity = 15f;
     private float FallMultiplier = 2.0f;
 
     // Constants
-    private float Speed = 5f;
+    private float Speed = 45f;
     private float TurnSpeed = 0.1f;
 
     // Trackers 
     bool Setup;
     float turnSmoothVelocity;
 
-    public Player_CrouchJump(PlayerStateMachineCore core)
+    public Player_Long_Jump(PlayerStateMachineCore core)
     {
         this.core = core;
     }
@@ -32,23 +32,22 @@ public class Player_CrouchJump : Player_State
 
     public override void StartMethod()
     {
+        Debug.Log("LONGJUMPING");
         core.DisableGroundCheck = true;
     }
 
     public override void UpdateMethod()
     {
-        if (core.movementInput.magnitude <= 0.1f)
-        {
-            MoveBackwards();
-        }
-        
+
+        MoveForwards();
+
         if (Setup == false)
         {
             if (core.Velocity.y < JumpVelocity)
             {
-                core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
-                core.animator.SetBool("jumpAnimation", true);
-                CurrentJumpHeight = 32f;
+                core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.yellow);
+                //core.animator.SetBool("jumpAnimation", true);
+                CurrentJumpHeight = 15f;
 
                 core.Velocity.y = CurrentJumpHeight;
 
@@ -67,14 +66,14 @@ public class Player_CrouchJump : Player_State
                 core.DisableGroundCheck = false;
             }
         }
-        
+
     }
 
-    // When Idle Crouch Jumping, you go backwards
-    private void MoveBackwards()
+    // When Long Jumping, you shoot forward
+    private void MoveForwards()
     {
-        float TargetAngle = core.transform.eulerAngles.y - 180;
-       
+        float TargetAngle = core.transform.eulerAngles.y;
+
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
@@ -100,7 +99,7 @@ public class Player_CrouchJump : Player_State
 
             /// Adjust for steepness of slopes
 
-            if (adjustVel.y < -0.2f || adjustVel.y > 0.2f) // Going Down Slope, Adjust Direction
+            if (adjustVel.y > 0.2f) // Going Down Slope, Adjust Direction
             {
                 return adjustVel;
             }

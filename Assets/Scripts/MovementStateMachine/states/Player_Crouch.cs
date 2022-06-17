@@ -33,7 +33,10 @@ public class Player_Crouch : Player_State
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
 
-        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        if (core.movementInput.magnitude > 0.1f)
+        {
+            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        }
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
 
@@ -61,7 +64,7 @@ public class Player_Crouch : Player_State
 
             if (adjustVel.y < -0.2f || adjustVel.y > 0.2f) // Going Down Slope, Adjust Direction
             {
-                return adjustVel;
+                if (core.sB != "ROLL") { return adjustVel; }
             }
         }
 

@@ -6,7 +6,7 @@ using UnityEngine;
 // Data type for each state in player movement state machine.
 public struct State
 {
-    public enum State_Types { IDLE, RUN, GROUND, JUMP, CROUCH, CROUCHJUMP, GROUNDPOUND }
+    public enum State_Types { IDLE, RUN, GROUND, JUMP, CROUCH, CROUCHJUMP, GROUNDPOUND, LONGJUMP, ROLL }
 
     State_Types currentStateTag;
     Player_State scriptReference;
@@ -49,10 +49,12 @@ public class PlayerStateMachineCore : MonoBehaviour
     private State sCrouch;
     private State sCrouchJump;
     private State sGroundPound;
+    private State sLongJump;
+    private State sRoll;
 
     // Core State Trackers 
-    public State sA; // ( Idle, Running, Crouch)
-    public State sB; // ( Grounded, Jumping, Crouch Jump, Ground Pound )
+    public State sA; // ( Idle, Running, Crouch, Roll)
+    public State sB; // ( Grounded, Jumping, Crouch Jump, Ground Pound, Long Jump )
 
     // User Inputs
     public Vector2 movementInput;
@@ -83,12 +85,15 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     // IEnumerator trackers, states depend on Core for IEnumerators
     [HideInInspector] public bool GroundPoundFall = false;
+    [HideInInspector] public bool postGroundPoundJumpPossible = false;
+    private bool longJumpWindow = false;
 
     // Private Variables
     float GroundCheckDistance = 0.4f;
     bool holdingJump = false;
     Coroutine reset = null;
     bool delayedGroundPoundFlip = false;
+
 
 
     private void Awake()
@@ -102,6 +107,8 @@ public class PlayerStateMachineCore : MonoBehaviour
         sCrouch = new State(State.State_Types.CROUCH, new Player_Crouch(this));
         sCrouchJump = new State(State.State_Types.CROUCHJUMP, new Player_CrouchJump(this));
         sGroundPound = new State(State.State_Types.GROUNDPOUND, new Player_GroundPound(this));
+        sLongJump = new State(State.State_Types.LONGJUMP, new Player_Long_Jump(this));
+        sRoll = new State(State.State_Types.ROLL, new Player_Rolling(this));
 
         sA = sIdle;
         sB = sGrounded;
@@ -129,7 +136,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         isCrouching = InputController.Player.Crouch.ReadValue<float>();
 
         isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
-        
+
 
         // holdingJump prevents repeated ghost jumps
         if (jumpInput == 0f) { holdingJump = false; }
@@ -138,7 +145,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         /// State Triggers
 
         // Jumping (sB)
-        if (jumpInput == 1f && sB == "GROUND" && sA != "CROUCH" && holdingJump == false )
+        if (jumpInput == 1f && sB == "GROUND" && sA != "CROUCH" && holdingJump == false)
         {
             if (reset != null)
             {
@@ -156,12 +163,17 @@ public class PlayerStateMachineCore : MonoBehaviour
         // Grounded (sB)
         if (isGrounded && sB != "GROUND" && DisableGroundCheck == false)
         {
+            if(sB == "LONGJUMP" && isCrouching == 1f)
+            {
+                sA = switchState(sA, sRoll);
+            }
             reset = StartCoroutine(ResetJumpCount());
             sB = switchState(sB, sGrounded);
+            
         }
 
         // Crouch Jump (sB)
-        if (isCrouching == 1f && jumpInput == 1f && sB == "GROUND" && sA == "CROUCH" && holdingJump == false)
+        if (longJumpWindow == false && isCrouching == 1f && jumpInput == 1f && sB == "GROUND" && sA == "CROUCH" && holdingJump == false)
         {
             DisableGroundCheck = true;
             holdingJump = true;
@@ -169,33 +181,44 @@ public class PlayerStateMachineCore : MonoBehaviour
         }
 
         // Ground Pound (sB)
-        if(isCrouching == 1f && sB == "JUMP" && sB != "GROUNDPOUND")
+        if (isCrouching == 1f && sB == "JUMP" && sB != "GROUNDPOUND")
         {
             sB = switchState(sB, sGroundPound);
             sA = switchState(sA, sIdle); // Can't move while GroundPounding
         }
 
+        // Long Jump (sB)
+        if (longJumpWindow && isCrouching == 1f && jumpInput == 1f && holdingJump == false)
+        {
+            sB = switchState(sB, sLongJump);
+            DisableGroundCheck = true;
+            holdingJump = true;
+        }
+
         /// sA
 
         // Running (sA)
-        if (isCrouching == 0f && movementInput.magnitude >= 0.1f && (sA == "IDLE" || sA == "CROUCH") && sA != "RUN" && sB != "CROUCHJUMP" && sB != "GROUNDPOUND")
+        if (isCrouching == 0f && movementInput.magnitude >= 0.1f && (sA == "IDLE" || sA == "CROUCH" || sA == "ROLL") && sA != "RUN" && sB != "CROUCHJUMP" && sB != "GROUNDPOUND")
         {
             sA = switchState(sA, sRunning);
         }
 
         // Idle (sA)
-        if (isCrouching == 0f && movementInput.magnitude < 0.1f && (sA == "RUN" || sA == "CROUCH") && sA != "IDLE")
+        if (isCrouching == 0f && movementInput.magnitude < 0.1f && (sA == "RUN" || sA == "CROUCH" || sA == "ROLL") && sA != "IDLE")
         {
             sA = switchState(sA, sIdle);
         }
 
         // Crouching (sA)
-        if (isCrouching == 1f && sB == "GROUND")
+        if (isCrouching == 1f && sB == "GROUND" && sB != "LONGJUMP" && sA != "ROLL")
         {
+            longJumpWindow = true;
+            StartCoroutine(LongJumpWindow());
             sA = switchState(sA, sCrouch);
         }
 
-      
+
+
 
 
         /// Run Scripts and Adjust Gravity
@@ -207,9 +230,9 @@ public class PlayerStateMachineCore : MonoBehaviour
 
         // Reset Velocity when grounded, else update velocity!
 
-        if (isGrounded && DisableGroundCheck == false){
+        if (isGrounded && DisableGroundCheck == false) {
             Velocity.y = -2f;
-        }else{
+        } else {
             Velocity.y += VelocityChange;
         }
 
@@ -259,5 +282,21 @@ public class PlayerStateMachineCore : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         GroundPoundFall = true;
         animator.speed = 1;
+    }
+
+    // Zone of time when you can long jump post ground pound
+    IEnumerator PostGroundPoundJump()
+    {
+        postGroundPoundJumpPossible = true;
+        yield return new WaitForSeconds(0.2f);
+        postGroundPoundJumpPossible = false;
+    }
+
+    // In this time, a long jump is possible after crouching
+    IEnumerator LongJumpWindow()
+    {
+        longJumpWindow = true;
+        yield return new WaitForSeconds(0.2f);
+        longJumpWindow = false;
     }
 }

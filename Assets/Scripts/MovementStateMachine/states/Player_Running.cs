@@ -64,11 +64,14 @@ public class Player_Running : Player_State
     // If player on slope, adjust running speed
     private Vector3 SlopeFix(Vector3 v, Vector3 pos)
     {
+        Debug.Log(v);
 
         var raycast = new Ray(pos, Vector3.down);
    
         if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
         {
+            Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
+            
             var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
 
             var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
@@ -81,7 +84,7 @@ public class Player_Running : Player_State
                 MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
 
                 // Don't adjust angle if jumping down hill.
-                if (core.sB != "JUMP") { return adjustVel; }
+                if (core.sB != "JUMP" && core.sB != "ROLL") { return adjustVel; }
             }
             else if (adjustVel.y > 0.2f) // Player Running Up Hill
             {

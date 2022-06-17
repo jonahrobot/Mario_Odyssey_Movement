@@ -14,6 +14,7 @@ public class Player_GroundPound : Player_State
 
     public override void ExitMethod()
     {
+        core.StartCoroutine("PostGroundPoundJump");
         core.GroundPoundFall = false;
         if (SavedRateOfGravity != 0f)
         {
