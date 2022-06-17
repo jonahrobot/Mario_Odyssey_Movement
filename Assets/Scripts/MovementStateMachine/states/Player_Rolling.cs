@@ -78,16 +78,14 @@ public class Player_Rolling : Player_State
         }
         else
         {
-            Direction = SlopeFixRollingBack(Direction, core.transform.position);
+            Direction = FindDirectionDownHill(core.transform.position);
         }
-
-        
-
+     
         core.Character.Move(Direction.normalized * Speed * Time.deltaTime);
 
     }
 
-    // If player on slope, adjust running speed
+    // If player on slope, adjust running angle
     private Vector3 SlopeFix(Vector3 v, Vector3 pos)
     {
 
@@ -112,33 +110,32 @@ public class Player_Rolling : Player_State
     }
 
 
-    // If player on slope, adjust running speed
-    private Vector3 SlopeFixRollingBack(Vector3 v, Vector3 pos)
+    // Find and return the Vector3 that represents the slope down the hill relative from a given position
+    private Vector3 FindDirectionDownHill(Vector3 pos)
     {
 
+        // Only works if on terrain
         var raycast = new Ray(pos, Vector3.down);
 
         if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
         {
-            var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
+            // To start get the normal of the raycast without the y
+            Vector3 normalFlat = new Vector3(hitInfo.normal.x, 0f, hitInfo.normal.z);
 
-            Vector3 test = new Vector3(hitInfo.normal.x, 0f, hitInfo.normal.z);
-            var adjustVel = Vector3.Reflect(test,hitInfo.normal).normalized;
+            // Find the angle between the normal and the flattened normal
+            var offsetAngle = Quaternion.FromToRotation(hitInfo.normal, normalFlat);
 
-            Debug.DrawRay(hitInfo.point, test, Color.yellow);
+            // Rotate our flattend normal by the offset to get our angle down the hill!
+            var downHillDirection = offsetAngle * normalFlat;
+
+            Debug.DrawRay(hitInfo.point, normalFlat, Color.yellow);
             Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
-            Debug.DrawRay(hitInfo.point, adjustVel, Color.cyan);
+            Debug.DrawRay(hitInfo.point, downHillDirection, Color.cyan);
 
-            // Debug.DrawRay(hitInfo.point, adjustVel);
-            //slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-
-            /// Adjust for steepness of slopes
-
-                return adjustVel;
-            
+            return downHillDirection;
         }
 
-        // If no adjustments made, return the old velocity
-        return v;
+        // If no adjustments made, return a empty Vector3
+        return Vector3.zero;
     }
 }
