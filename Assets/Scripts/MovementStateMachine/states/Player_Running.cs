@@ -64,7 +64,7 @@ public class Player_Running : Player_State
     // If player on slope, adjust running speed
     private Vector3 SlopeFix(Vector3 v, Vector3 pos)
     {
-        Debug.Log(v);
+        //Debug.Log(v);
 
         var raycast = new Ray(pos, Vector3.down);
    

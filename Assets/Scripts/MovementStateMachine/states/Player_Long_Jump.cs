@@ -76,8 +76,12 @@ public class Player_Long_Jump : Player_State
 
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
 
-        Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+        //core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        
 
+        Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+        core.LongJumpDirection = Direction;
+        
         Direction = SlopeFix(Direction, core.transform.position);
 
 

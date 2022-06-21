@@ -86,6 +86,8 @@ public class PlayerStateMachineCore : MonoBehaviour
     // IEnumerator trackers, states depend on Core for IEnumerators
     [HideInInspector] public bool GroundPoundFall = false;
     [HideInInspector] public bool postGroundPoundJumpPossible = false;
+    [HideInInspector] public Vector3 LongJumpDirection;
+
     private bool longJumpWindow = false;
 
     // Private Variables
@@ -93,7 +95,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     bool holdingJump = false;
     Coroutine reset = null;
     bool delayedGroundPoundFlip = false;
-
+    
 
 
     private void Awake()
