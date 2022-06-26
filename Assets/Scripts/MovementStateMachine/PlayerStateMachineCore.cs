@@ -272,7 +272,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     // Delay Ground Pound
     IEnumerator GroundPoundDelay()
     {
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false)
+        if (animator.GetBool("jumpAnimation") == false)
         {
             animator.SetBool("jumpAnimation", true);
         }

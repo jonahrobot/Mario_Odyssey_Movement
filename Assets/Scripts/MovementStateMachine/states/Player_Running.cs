@@ -38,6 +38,10 @@ public class Player_Running : Player_State
 
     public override void UpdateMethod()
     {
+        if (core.animator.GetBool("RunAnimation") == false)
+        {
+            core.animator.SetBool("RunAnimation", true);
+        }
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
        

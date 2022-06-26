@@ -20,6 +20,7 @@ public class scr_jump_animation : StateMachineBehaviour
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         animator.SetBool("jumpAnimation", false);
+        animator.SetBool("RunAnimation", false);
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()

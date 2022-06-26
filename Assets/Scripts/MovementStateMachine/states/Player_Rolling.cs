@@ -20,6 +20,7 @@ public class Player_Rolling : Player_State
     float MaxSprintSpeed;
 
     bool GoingUpHill;
+    bool OnFlatGround;
     Vector3 CurrentDirection;
 
     public Player_Rolling(PlayerStateMachineCore core)
@@ -32,6 +33,8 @@ public class Player_Rolling : Player_State
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
         GoingUpHill = false;
+        core.animator.speed = 1;
+        OnFlatGround = false;
     }
 
     public override void StartMethod()
@@ -39,14 +42,24 @@ public class Player_Rolling : Player_State
         CurrentDirection = core.LongJumpDirection;
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
+        core.animator.speed *= 3;
         GoingUpHill = false;
+        OnFlatGround = false;
     }
 
     public override void UpdateMethod()
     {
+        if (core.animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false) { 
+            core.animator.SetBool("jumpAnimation", true);
+        }
+
         var reversedDirectonThisFrame = false;
         Vector3 Direction = CurrentDirection;
-        Debug.DrawRay(core.transform.position, Direction, Color.magenta, 2);
+
+        float TargetAngle = Mathf.Atan2(Direction.x, Direction.z) * Mathf.Rad2Deg;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
+        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        //Debug.DrawRay(core.transform.position, Direction, Color.magenta, 2);
         if (GoingUpHill == true)
         {
             CurrentSprintSpeed -= 0.1125f;
@@ -55,7 +68,7 @@ public class Player_Rolling : Player_State
             {
                 CurrentDirection = FindDirectionDownHill(core.transform.position);
                 //CurrentDirection = new Vector3(CurrentDirection.x, 0f, CurrentDirection.z);
-
+                Debug.Log("Flipped Direction");
                 reversedDirectonThisFrame = true;
 
                 CurrentSprintSpeed = 5f;
@@ -65,15 +78,23 @@ public class Player_Rolling : Player_State
         }
         else
         {
-            // Accelerate player
-            if (CurrentSprintSpeed < MaxSprintSpeed)
+            if (OnFlatGround)
             {
-                CurrentSprintSpeed *= SprintAcceleration;
+                CurrentSprintSpeed -= 0.0025f;
+                CurrentSprintSpeed = Mathf.Clamp(CurrentSprintSpeed, 0, 100);
             }
             else
             {
-                // If current speed higher than max, slow player down!
-                CurrentSprintSpeed /= SprintAcceleration;
+                // Accelerate player
+                if (CurrentSprintSpeed < MaxSprintSpeed)
+                {
+                    CurrentSprintSpeed *= SprintAcceleration;
+                }
+                else
+                {
+                    // If current speed higher than max, slow player down!
+                    CurrentSprintSpeed /= SprintAcceleration;
+                }
             }
         }
         if (reversedDirectonThisFrame == false)
@@ -94,35 +115,38 @@ public class Player_Rolling : Player_State
 
         if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
         {
-            Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
+            //Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
 
             var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
 
             var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-
+            
             /// Adjust for steepness of slopes
             /// 
-            Debug.Log("Velocity" + v);
-            Debug.Log("Adjusted " + adjustVel);
-            if (adjustVel.y < -0.2f) // Player Running Down Hill
+            //Debug.Log("Velocity" + v);
+            //Debug.Log("Adjusted " + adjustVel);
+            if (adjustVel.y < -0.05f) // Player Running Down Hill
             {
-                //Debug.Log("Thinks its going down hill!");
+                Debug.Log("Thinks its going down hill!");
                 GoingUpHill = false;
+                OnFlatGround = false;
                 SprintAcceleration = 1.00125f + 0.00125f;
                 MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
 
                 // Don't adjust angle if jumping down hill.
                 return adjustVel;
             }
-            else if (adjustVel.y > 0.2f) // Player Running Up Hill
+            else if (adjustVel.y > 0.05f) // Player Running Up Hill
             {
-                //Debug.Log("Thinks its going up hill!");
+                Debug.Log("Thinks its going up hill!");
                 GoingUpHill = true;
+                OnFlatGround = false;
                 return adjustVel;
             }
             else // At Flat Ground
             {
-                //Debug.Log("Thinks its FLAT GROUND");
+                Debug.Log("Thinks its FLAT GROUND");
+                OnFlatGround = true;
                 GoingUpHill = false;
                 SprintAcceleration = 1.00125f;
                 MaxSprintSpeed = DefaultMaxSprintSpeed;
