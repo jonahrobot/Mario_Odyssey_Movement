@@ -30,6 +30,8 @@ public class Player_Jumping : Player_State
         AlreadyLetGo = false;
         DoingFinalJump = false;
         Setup = false;
+        core.animator.SetBool("Jump_2", false);
+        core.animator.SetBool("Jump_1", false);
     }
 
     public override void StartMethod()
@@ -68,7 +70,15 @@ public class Player_Jumping : Player_State
 
                 /// Handle each stage of jumping
                 core.JumpCombo += 1;
-
+                if (Random.Range(0, 2) == 0)
+                {
+                    core.animator.SetBool("Jump_1", true);
+                }
+                else
+                {
+                    core.animator.SetBool("Jump_2", true);
+                }
+                core.animator.SetBool("Run", false);
                 if (core.postGroundPoundJumpPossible)
                 {
                     core.JumpCombo = 3;
@@ -87,7 +97,7 @@ public class Player_Jumping : Player_State
                 if (core.JumpCombo == 3)
                 {
                     core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
-                    core.animator.SetBool("jumpAnimation", true);
+                   
                     CurrentJumpHeight = 35f;
                 }
 

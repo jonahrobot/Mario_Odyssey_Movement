@@ -47,7 +47,7 @@ public class Player_CrouchJump : Player_State
             if (core.Velocity.y < JumpVelocity)
             {
                 core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
-                core.animator.SetBool("jumpAnimation", true);
+                core.animator.SetBool("LongJump", true);
                 CurrentJumpHeight = 32f;
 
                 core.Velocity.y = CurrentJumpHeight;

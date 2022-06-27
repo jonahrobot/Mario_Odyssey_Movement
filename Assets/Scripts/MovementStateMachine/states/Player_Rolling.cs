@@ -50,7 +50,7 @@ public class Player_Rolling : Player_State
     public override void UpdateMethod()
     {
         if (core.animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false) { 
-            core.animator.SetBool("jumpAnimation", true);
+            //core.animator.SetBool("jumpAnimation", true);
         }
 
         var reversedDirectonThisFrame = false;

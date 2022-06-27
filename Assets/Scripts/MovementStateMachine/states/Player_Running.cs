@@ -28,6 +28,7 @@ public class Player_Running : Player_State
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
+        core.animator.SetBool("Run", false);
     }
 
     public override void StartMethod()
@@ -38,9 +39,11 @@ public class Player_Running : Player_State
 
     public override void UpdateMethod()
     {
-        if (core.animator.GetBool("RunAnimation") == false)
+        if (core.animator.GetBool("Run") == false)
         {
-            core.animator.SetBool("RunAnimation", true);
+            core.animator.SetBool("Run", true);
+            core.animator.SetBool("Jump_1", false);
+            core.animator.SetBool("Jump_2", false);
         }
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);

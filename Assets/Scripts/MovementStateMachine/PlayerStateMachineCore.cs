@@ -246,7 +246,7 @@ public class PlayerStateMachineCore : MonoBehaviour
             if (animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false && GroundPoundFall == false)
             {
                 delayedGroundPoundFlip = false;
-                animator.SetBool("jumpAnimation", true);
+                //animator.SetBool("jumpAnimation", true);
             }
         }
     }
@@ -274,7 +274,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         if (animator.GetBool("jumpAnimation") == false)
         {
-            animator.SetBool("jumpAnimation", true);
+           // animator.SetBool("jumpAnimation", true);
         }
         else
         {
