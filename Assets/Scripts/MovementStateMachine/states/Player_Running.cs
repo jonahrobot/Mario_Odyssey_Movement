@@ -35,11 +35,17 @@ public class Player_Running : Player_State
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
+        if (core.sB != "JUMP")
+        {
+            core.animator.SetBool("Run", true);
+            core.animator.SetBool("Jump_1", false);
+            core.animator.SetBool("Jump_2", false);
+        }
     }
 
     public override void UpdateMethod()
     {
-        if (core.animator.GetBool("Run") == false)
+        if (core.sB != "JUMP")
         {
             core.animator.SetBool("Run", true);
             core.animator.SetBool("Jump_1", false);
