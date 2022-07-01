@@ -63,13 +63,12 @@ public class Player_CrouchJump : Player_State
         
         if (Setup == false)
         {
-            if (core.Velocity.y < JumpVelocity)
+            if (core.GetVelocity().y < JumpVelocity)
             {
-               // core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
-                core.animator.SetBool("LongJump", true);
+                // core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
+                core.ChangeAnimationState("LongJump", true);
                 CurrentJumpHeight = 32f;
-
-                core.Velocity.y = CurrentJumpHeight;
+                core.SetVerticalVelocity(CurrentJumpHeight);
 
                 // Finishing setup
                 Setup = true;
@@ -77,16 +76,21 @@ public class Player_CrouchJump : Player_State
         }
 
         // If jump has reached apex, fall is faster
-        if (core.Velocity.y < CurrentJumpHeight / 2)
+     
+        
+    }
+    public override float GetUpdateToGravity()
+    {
+        if (core.GetVelocity().y < CurrentJumpHeight / 2)
         {
-            core.VelocityChange *= FallMultiplier;
+            return FallMultiplier;
 
             if (core.DisableGroundCheck == true)
             {
                 core.DisableGroundCheck = false;
             }
         }
-        
+        return 0;
     }
 
     // When Idle Crouch Jumping, you go backwards
@@ -101,7 +105,7 @@ public class Player_CrouchJump : Player_State
         Direction = SlopeFix(Direction, core.transform.position);
 
 
-        core.Character.Move(Direction.normalized * Speed * Time.deltaTime);
+        core.MovePlayer(Direction,Speed);
 
     }
 

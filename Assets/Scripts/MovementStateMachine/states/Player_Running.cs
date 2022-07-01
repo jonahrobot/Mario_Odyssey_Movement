@@ -38,24 +38,25 @@ public class Player_Running : Player_State
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
-        core.animator.SetBool("Run", false);
+
+        core.ChangeAnimationState("Run", false);
     }
 
     public override void StartMethod()
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
-   
-            core.animator.SetBool("Run", true);
-        
+
+        core.ChangeAnimationState("Run", true);
+
     }
 
     public override void UpdateMethod()
     {
-   
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
+
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-       
+
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
@@ -73,7 +74,7 @@ public class Player_Running : Player_State
 
         Direction = SlopeFix(Direction, core.transform.position);
 
-        core.Character.Move(Direction.normalized * CurrentSprintSpeed * Time.deltaTime);
+        core.MovePlayer(Direction, CurrentSprintSpeed);
     }
 
     // If player on slope, adjust running speed
@@ -82,24 +83,24 @@ public class Player_Running : Player_State
         //Debug.Log(v);
 
         var raycast = new Ray(pos, Vector3.down);
-   
+
         if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
         {
             Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
-            
+
             var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
 
             var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-            
+
             /// Adjust for steepness of slopes
 
             if (adjustVel.y < -0.2f) // Player Running Down Hill
-            { 
+            {
                 SprintAcceleration = 1.00125f + 0.00125f;
                 MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
 
                 // Don't adjust angle if jumping down hill.
-                return adjustVel; 
+                return adjustVel;
             }
             else if (adjustVel.y > 0.2f) // Player Running Up Hill
             {
@@ -115,5 +116,9 @@ public class Player_Running : Player_State
 
         // If no adjustments made, return the old velocity
         return v;
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 }

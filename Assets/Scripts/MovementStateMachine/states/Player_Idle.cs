@@ -8,7 +8,7 @@ public class Player_Idle : Player_State
 
     public Player_Idle(PlayerStateMachineCore core)
     {
-        this.core = core; 
+        this.core = core;
     }
     public override void CheckForStateSwap()
     {
@@ -36,5 +36,9 @@ public class Player_Idle : Player_State
 
     public override void UpdateMethod()
     {
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 }

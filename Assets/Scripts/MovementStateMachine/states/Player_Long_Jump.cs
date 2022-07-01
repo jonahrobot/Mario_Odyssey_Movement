@@ -33,19 +33,16 @@ public class Player_Long_Jump : Player_State
     public override void ExitMethod()
     {
         // Reset Tracker
-       
-        core.animator.SetBool("LongJump", false);
+
+        core.ChangeAnimationState("LongJump", false);
         Setup = false;
     }
 
     public override void StartMethod()
     {
-        Debug.Log("LONGJUMPING");
-        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
-        {
-            core.animator.SetBool(parameter.name, false);
-        }
-        core.animator.SetBool("LongJump", true);
+
+   
+        core.ChangeAnimationState("LongJump", true);
         core.DisableGroundCheck = true;
         core.DisableGroundCheck = true;
         core.holdingJump = true;
@@ -58,34 +55,39 @@ public class Player_Long_Jump : Player_State
 
         if (Setup == false)
         {
-            if (core.Velocity.y < JumpVelocity)
+            if (core.GetVelocity().y < JumpVelocity)
             {
-               // core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.yellow);
-                //core.animator.SetBool("jumpAnimation", true);
+
                 CurrentJumpHeight = 15f;
 
-                core.Velocity.y = CurrentJumpHeight;
+                core.SetVerticalVelocity(CurrentJumpHeight);
 
-                // Finishing setup
+         
                 Setup = true;
             }
         }
 
+     
+
+    }
+
+    public override float GetUpdateToGravity()
+    {
         // If jump has reached apex, fall is faster
-        if (core.Velocity.y < CurrentJumpHeight / 2)
+        if (core.GetVelocity().y < CurrentJumpHeight / 2)
         {
-            core.VelocityChange *= FallMultiplier;
+            return FallMultiplier;
 
             if (core.DisableGroundCheck == true)
             {
                 core.DisableGroundCheck = false;
             }
         }
-
+        return 0;
     }
 
-    // When Long Jumping, you shoot forward
-    private void MoveForwards()
+        // When Long Jumping, you shoot forward
+        private void MoveForwards()
     {
         float TargetAngle = core.transform.eulerAngles.y;
 
@@ -100,7 +102,7 @@ public class Player_Long_Jump : Player_State
         Direction = SlopeFix(Direction, core.transform.position);
 
 
-        core.Character.Move(Direction.normalized * Speed * Time.deltaTime);
+        core.MovePlayer(Direction,Speed);
 
     }
 

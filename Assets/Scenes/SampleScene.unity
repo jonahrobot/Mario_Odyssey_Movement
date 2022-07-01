@@ -801,20 +801,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da362fe2a77d1614eaf566fead36d586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPressingCrouch: 0
+  isPressingSpace: 0
+  isPressingWSAD: 0
   movementInput: {x: 0, y: 0}
-  jumpInput: 0
   isGrounded: 0
-  isCrouching: 0
-  Camera: {fileID: 782802903}
-  GroundCheck: {fileID: 1371483717}
+  CameraRotation: {x: 0, y: 0, z: 0}
   GroundMask:
     serializedVersion: 2
     m_Bits: 8
-  animator: {fileID: 0}
-  Model: {fileID: 2056314329}
-  Character: {fileID: 0}
-  VelocityChange: 0
-  RateOfGravity: -50
   Velocity: {x: 0, y: 0, z: 0}
   DisableGroundCheck: 0
   JumpCombo: 0
@@ -822,6 +817,8 @@ MonoBehaviour:
   GroundPoundFall: 0
   postGroundPoundJumpPossible: 0
   LongJumpDirection: {x: 0, y: 0, z: 0}
+  longJumpWindow: 0
+  holdingJump: 0
 --- !u!136 &910455866
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1650,11 +1647,6 @@ PrefabInstance:
 --- !u!4 &2033236140 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8ea771beade62af418c395390d6f5ae8, type: 3}
-  m_PrefabInstance: {fileID: 2033236139}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2056314329 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: -466329591000292508, guid: 8ea771beade62af418c395390d6f5ae8, type: 3}
   m_PrefabInstance: {fileID: 2033236139}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2059505690

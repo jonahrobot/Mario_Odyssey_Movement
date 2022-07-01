@@ -20,49 +20,42 @@ public class Player_GroundPound : Player_State
     }
     public override void ExitMethod()
     {
-        core.animator.SetBool("GroundPound", false);
+        core.ChangeAnimationState("GroundPound", false);
+
         core.StartCoroutine("PostGroundPoundJump");
         core.GroundPoundFall = false;
-        if (SavedRateOfGravity != 0f)
-        {
-            core.RateOfGravity = SavedRateOfGravity;
-            SavedRateOfGravity = 0f;
-        }
+        core.EnableGravity(true);
     }
 
     public override void StartMethod()
     {
-        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
-        {
-            core.animator.SetBool(parameter.name, false);
-        }
-        core.animator.SetBool("GroundPound", true);
+        core.ChangeAnimationState("GroundPound", true);
 
         core.GroundPoundFall = false;
-        if (core.RateOfGravity != 0f)
-        {
-            core.StartCoroutine("GroundPoundDelay");
-            SavedRateOfGravity = core.RateOfGravity;
-            core.RateOfGravity = 0f;
-            core.Velocity.y = 0f;
-        }
+
+        core.StartCoroutine("GroundPoundDelay");
+        core.EnableGravity(false);
+        
     }
 
     public override void UpdateMethod()
     {
 
-        if (core.GroundPoundFall == true)
-        {
-            if (core.RateOfGravity != SavedRateOfGravity && SavedRateOfGravity != 0f)
-            {
-                core.RateOfGravity = SavedRateOfGravity;
-            }
-            core.VelocityChange *= 8f;
-        }
+        
 
         if (core.DisableGroundCheck == true)
         {
             core.DisableGroundCheck = false;
         }
     }
+
+    public override float GetUpdateToGravity()
+    {
+        if (core.GroundPoundFall == true)
+        {
+            return 8f;
+        }
+        return 0f;
+    }
+
 }

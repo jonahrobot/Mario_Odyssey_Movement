@@ -29,61 +29,49 @@ public class Player_Rolling : Player_State
     }
     public override void CheckForStateSwap()
     {
-       //leaf node
+        //leaf node
     }
     public override void ExitMethod()
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
         GoingUpHill = false;
-        core.animator.speed = 1;
         OnFlatGround = false;
-        core.animator.SetBool("Roll", false);
+        core.ChangeAnimationState("Roll", false);
     }
 
     public override void StartMethod()
     {
-        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
-        {
-            core.animator.SetBool(parameter.name, false);
-        }
-        core.animator.SetBool("Roll", true);
+        core.ChangeAnimationState("Roll", true);
 
         CurrentDirection = core.LongJumpDirection;
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
-        core.animator.speed *= 3;
         GoingUpHill = false;
         OnFlatGround = false;
     }
 
     public override void UpdateMethod()
     {
-        if (core.animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false) { 
-            //core.animator.SetBool("jumpAnimation", true);
-        }
-        core.Model.transform.Rotate(20, 0, 0);
         var reversedDirectonThisFrame = false;
         Vector3 Direction = CurrentDirection;
 
         float TargetAngle = Mathf.Atan2(Direction.x, Direction.z) * Mathf.Rad2Deg;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
-        //Debug.DrawRay(core.transform.position, Direction, Color.magenta, 2);
+
         if (GoingUpHill == true)
         {
             CurrentSprintSpeed -= 0.1125f;
             CurrentSprintSpeed = Mathf.Clamp(CurrentSprintSpeed, 0, 100);
-            if(CurrentSprintSpeed == 0)
+            if (CurrentSprintSpeed == 0)
             {
                 CurrentDirection = FindDirectionDownHill(core.transform.position);
-                //CurrentDirection = new Vector3(CurrentDirection.x, 0f, CurrentDirection.z);
-                Debug.Log("Flipped Direction");
                 reversedDirectonThisFrame = true;
 
                 CurrentSprintSpeed = 5f;
                 GoingUpHill = false;
-                
+
             }
         }
         else
@@ -111,7 +99,7 @@ public class Player_Rolling : Player_State
         {
             Direction = SlopeFix(Direction, core.transform.position);
 
-            core.Character.Move(Direction.normalized * CurrentSprintSpeed * Time.deltaTime);
+            core.MovePlayer(Direction, CurrentSprintSpeed);
         }
     }
 
@@ -130,7 +118,7 @@ public class Player_Rolling : Player_State
             var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
 
             var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-            
+
             /// Adjust for steepness of slopes
             /// 
             //Debug.Log("Velocity" + v);
@@ -187,7 +175,7 @@ public class Player_Rolling : Player_State
             var downHillDirection = offsetAngle * normalFlat;
 
             //Debug.DrawRay(hitInfo.point, normalFlat, Color.yellow);
-           // Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
+            // Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
             //Debug.DrawRay(hitInfo.point, downHillDirection, Color.cyan);
 
             //return downHillDirection;
@@ -195,5 +183,9 @@ public class Player_Rolling : Player_State
 
         // If no adjustments made, return a empty Vector3
         return Vector3.zero;
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 }

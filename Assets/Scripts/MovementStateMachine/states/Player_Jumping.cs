@@ -23,6 +23,7 @@ public class Player_Jumping : Player_State
     {
         this.core = core;
     }
+
     public override void CheckForStateSwap()
     {
         if (core.isPressingCrouch)
@@ -41,12 +42,22 @@ public class Player_Jumping : Player_State
         AlreadyLetGo = false;
         DoingFinalJump = false;
         Setup = false;
-        core.animator.SetBool("Jump_2", false);
-        core.animator.SetBool("Jump_1", false);
+        core.ChangeAnimationState("Jump_1", false);
+        core.ChangeAnimationState("Jump_2", false);
     }
 
     public override void StartMethod()
     {
+        if (core.stateMemory.IsVariableStored("JumpCounter") == false)
+        {
+            core.stateMemory.StoreFloat("JumpCounter", 0);
+        }
+
+        if (core.stateMemory.IsVariableStored("AbleToTripleJump") == false)
+        {
+            core.stateMemory.StoreBool("AbleToTripleJump", true);
+        }
+
         core.DisableGroundCheck = true;
 
 
@@ -56,77 +67,83 @@ public class Player_Jumping : Player_State
             core.reset = null;
         }
 
-        core.DisableGroundCheck = true;
         core.holdingJump = true;
 
     }
 
+ 
+
     public override void UpdateMethod()
     {
-        var UserInput = core.InputController.Player.Movement.ReadValue<Vector2>().normalized;
+        var UserInput = core.movementInput;
 
         // Triple jumps can't occure if player idle jumps
-        if (UserInput.magnitude < 0.1f)
+        if (core.isPressingWSAD == false)
         {
-            core.AbleToTripleJump = false;
+            core.stateMemory.StoreBool("AbleToTripleJump", false);
         }
 
         // Setup initial jump acceleration 
-        if (core.jumpInput == 1f && core.isGrounded && Setup == false)
+        if (core.isPressingSpace && core.isGrounded && Setup == false)
         {
-            if (core.Velocity.y < InitialJumpVelocity)
+            if (core.GetVelocity().y < InitialJumpVelocity)
             {
+                var jumpCounter = core.stateMemory.GetFloat("JumpCounter");
+
                 // If trying to triple jump but not moving, cancel it
-                if (core.JumpCombo == 2 && UserInput.magnitude < 0.1f)
+                if (jumpCounter == 2 && core.isPressingWSAD == false)
                 {
-                    core.JumpCombo = 0;
+                    jumpCounter = 0;
                 }
 
                 // If not able to triple jump, just default jump
-                if (core.JumpCombo == 2 && core.AbleToTripleJump == false)
+                if (jumpCounter == 2 && core.stateMemory.GetBool("AbleToTripleJump") == false)
                 {
-                    core.JumpCombo = 0;
+                    jumpCounter = 0;
 
-                    core.AbleToTripleJump = true;
+                    core.stateMemory.StoreBool("AbleToTripleJump", true);
                 }
 
                 /// Handle each stage of jumping
-                core.JumpCombo += 1;
+                jumpCounter += 1;
 
                 if (core.postGroundPoundJumpPossible)
                 {
-                    core.JumpCombo = 3;
+                    jumpCounter = 3;
                 }
 
-                if (core.JumpCombo == 1)
+                if (jumpCounter == 1)
                 {
 
                     CurrentJumpHeight = 25f;
-                    core.animator.SetBool("Jump_1", true);
+                    core.ChangeAnimationState("Jump_1", true);
                 }
-                if (core.JumpCombo == 2)
+                if (jumpCounter == 2)
                 {
 
                     CurrentJumpHeight = 26f;
-                    core.animator.SetBool("Jump_2", true);
+                    core.ChangeAnimationState("Jump_2", true);
                 }
-                if (core.JumpCombo == 3)
+                if (jumpCounter == 3)
                 {
 
 
                     CurrentJumpHeight = 35f;
                 }
 
-                core.Velocity.y = CurrentJumpHeight;
+                
+
+                core.SetVerticalVelocity(CurrentJumpHeight);
 
                 // Finishing setup
                 Setup = true;
 
-                if (core.JumpCombo > 2)
+                if (jumpCounter > 2)
                 {
                     DoingFinalJump = true;
-                    core.JumpCombo = 0;
+                    jumpCounter = 0;
                 }
+                core.stateMemory.StoreFloat("JumpCounter", jumpCounter);
 
                 if (Reset != null)
                 {
@@ -137,12 +154,17 @@ public class Player_Jumping : Player_State
 
         // Increase Falling Velocity
 
-        if (((core.jumpInput == 0f && core.Velocity.y > CurrentJumpHeight / 2) || AlreadyLetGo) && !DoingFinalJump)
+       
+    }
+
+    public override float GetUpdateToGravity()
+    {
+        if (((!core.isPressingSpace && core.GetVelocity().y > CurrentJumpHeight / 2) || AlreadyLetGo) && !DoingFinalJump)
         {
             // If Jump button was released before jumps apex, short jump occures
-            if (core.Velocity.y < CurrentJumpHeight * 0.75f)
+            if (core.GetVelocity().y < CurrentJumpHeight * 0.75f)
             {
-                core.VelocityChange *= LetGoMultiplier;
+                return LetGoMultiplier;
 
                 if (core.DisableGroundCheck == true)
                 {
@@ -154,9 +176,9 @@ public class Player_Jumping : Player_State
         else
         {
             // If jump has reached apex, fall is faster
-            if (core.Velocity.y < CurrentJumpHeight / 2)
+            if (core.GetVelocity().y < CurrentJumpHeight / 2)
             {
-                core.VelocityChange *= FallMultiplier;
+                return FallMultiplier;
 
                 if (core.DisableGroundCheck == true)
                 {
@@ -164,5 +186,8 @@ public class Player_Jumping : Player_State
                 }
             }
         }
+
+        return 0;
     }
+
 }

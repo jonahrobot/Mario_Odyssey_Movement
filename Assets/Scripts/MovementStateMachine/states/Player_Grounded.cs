@@ -23,11 +23,15 @@ public class Player_Grounded : Player_State
     public override void StartMethod()
     {
         // Reset Velocity when grounded
-      
-        core.Velocity = new Vector3(0f,-2f,0f);
+
+        //core.Velocity = new Vector3(0f, -2f, 0f);
     }
 
     public override void UpdateMethod()
     {
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 }

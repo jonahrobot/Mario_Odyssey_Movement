@@ -15,6 +15,7 @@ public class Player_Crouch : Player_State
 
     float turnSmoothVelocity;
 
+    bool walking;
     public Player_Crouch(PlayerStateMachineCore core)
     {
         this.core = core;
@@ -34,29 +35,20 @@ public class Player_Crouch : Player_State
 
     public override void ExitMethod()
     {
-        core.animator.SetBool("Crouch", false);
-        core.animator.SetBool("CrouchWalk", false);
+        core.ChangeAnimationState("Crouch", false);
+        core.ChangeAnimationState("CrouchWalk", false);
     }
 
     public override void StartMethod()
     {
-        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
-        {
-            core.animator.SetBool(parameter.name, false);
-        }
-        core.animator.SetBool("Crouch", true);
+        core.ChangeAnimationState("Crouch", true);
         core.longJumpWindow = true;
     }
 
     public override void UpdateMethod()
     {
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-
-        if (core.movementInput.magnitude > 0.1f)
-        {
-            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
-        }
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
 
@@ -64,19 +56,23 @@ public class Player_Crouch : Player_State
 
         if (core.movementInput.magnitude > 0.1f)
         {
-            if (core.animator.GetBool("Crouch"))
+            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+            core.MovePlayer(Direction, Speed);
+
+            if (walking == false)
             {
-                core.animator.SetBool("Crouch", false);
-                core.animator.SetBool("CrouchWalk", true);
+                core.ChangeAnimationState("Crouch", false);
+                core.ChangeAnimationState("CrouchWalk", true);
+                walking = true;
             }
-            core.Character.Move(Direction.normalized * Speed * Time.deltaTime);
         }
         else
         {
-            if (core.animator.GetBool("CrouchWalk"))
+            if (walking == true)
             {
-                core.animator.SetBool("Crouch", true);
-                core.animator.SetBool("CrouchWalk", false);
+                core.ChangeAnimationState("CrouchWalk", false);
+                core.ChangeAnimationState("Crouch", true);
+                walking = false;
             }
         }
     }
@@ -103,6 +99,10 @@ public class Player_Crouch : Player_State
 
         // If no adjustments made, return the old velocity
         return v;
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 }
 
