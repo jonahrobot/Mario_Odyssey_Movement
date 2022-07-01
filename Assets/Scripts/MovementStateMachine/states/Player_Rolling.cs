@@ -27,7 +27,10 @@ public class Player_Rolling : Player_State
     {
         this.core = core;
     }
-
+    public override void CheckForStateSwap()
+    {
+       //leaf node
+    }
     public override void ExitMethod()
     {
         CurrentSprintSpeed = BaseSprintSpeed;
@@ -35,10 +38,17 @@ public class Player_Rolling : Player_State
         GoingUpHill = false;
         core.animator.speed = 1;
         OnFlatGround = false;
+        core.animator.SetBool("Roll", false);
     }
 
     public override void StartMethod()
     {
+        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
+        {
+            core.animator.SetBool(parameter.name, false);
+        }
+        core.animator.SetBool("Roll", true);
+
         CurrentDirection = core.LongJumpDirection;
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
@@ -52,7 +62,7 @@ public class Player_Rolling : Player_State
         if (core.animator.GetCurrentAnimatorStateInfo(0).IsName("JumpAnimation") == false) { 
             //core.animator.SetBool("jumpAnimation", true);
         }
-
+        core.Model.transform.Rotate(20, 0, 0);
         var reversedDirectonThisFrame = false;
         Vector3 Direction = CurrentDirection;
 

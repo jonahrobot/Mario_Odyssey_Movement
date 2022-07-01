@@ -20,12 +20,32 @@ public class Player_Crouch : Player_State
         this.core = core;
     }
 
+    public override void CheckForStateSwap()
+    {
+        if (core.isPressingSpace)
+        {
+            core.SwapState(new Player_CrouchJump(core));
+        }
+        if (!core.isPressingCrouch)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
+    }
+
     public override void ExitMethod()
     {
+        core.animator.SetBool("Crouch", false);
+        core.animator.SetBool("CrouchWalk", false);
     }
 
     public override void StartMethod()
     {
+        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
+        {
+            core.animator.SetBool(parameter.name, false);
+        }
+        core.animator.SetBool("Crouch", true);
+        core.longJumpWindow = true;
     }
 
     public override void UpdateMethod()
@@ -44,7 +64,20 @@ public class Player_Crouch : Player_State
 
         if (core.movementInput.magnitude > 0.1f)
         {
+            if (core.animator.GetBool("Crouch"))
+            {
+                core.animator.SetBool("Crouch", false);
+                core.animator.SetBool("CrouchWalk", true);
+            }
             core.Character.Move(Direction.normalized * Speed * Time.deltaTime);
+        }
+        else
+        {
+            if (core.animator.GetBool("CrouchWalk"))
+            {
+                core.animator.SetBool("Crouch", true);
+                core.animator.SetBool("CrouchWalk", false);
+            }
         }
     }
 
@@ -64,7 +97,7 @@ public class Player_Crouch : Player_State
 
             if (adjustVel.y < -0.2f || adjustVel.y > 0.2f) // Going Down Slope, Adjust Direction
             {
-                if (core.sB != "ROLL") { return adjustVel; }
+                return adjustVel;
             }
         }
 

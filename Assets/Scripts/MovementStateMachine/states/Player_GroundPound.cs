@@ -11,9 +11,16 @@ public class Player_GroundPound : Player_State
     {
         this.core = core;
     }
-
+    public override void CheckForStateSwap()
+    {
+        if (core.isGrounded)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
+    }
     public override void ExitMethod()
     {
+        core.animator.SetBool("GroundPound", false);
         core.StartCoroutine("PostGroundPoundJump");
         core.GroundPoundFall = false;
         if (SavedRateOfGravity != 0f)
@@ -25,6 +32,12 @@ public class Player_GroundPound : Player_State
 
     public override void StartMethod()
     {
+        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
+        {
+            core.animator.SetBool(parameter.name, false);
+        }
+        core.animator.SetBool("GroundPound", true);
+
         core.GroundPoundFall = false;
         if (core.RateOfGravity != 0f)
         {

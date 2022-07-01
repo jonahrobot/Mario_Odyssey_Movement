@@ -23,6 +23,17 @@ public class Player_Jumping : Player_State
     {
         this.core = core;
     }
+    public override void CheckForStateSwap()
+    {
+        if (core.isPressingCrouch)
+        {
+            core.SwapState(new Player_GroundPound(core));
+        }
+        if (core.isGrounded)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
+    }
 
     public override void ExitMethod()
     {
@@ -37,11 +48,17 @@ public class Player_Jumping : Player_State
     public override void StartMethod()
     {
         core.DisableGroundCheck = true;
-        if (core.animator.GetBool("Jump_1") == false && core.animator.GetBool("Jump_2") == false)
+
+
+        if (core.reset != null)
         {
-  
-            core.animator.SetBool("Run", false);
+            core.StopCoroutine(core.reset);
+            core.reset = null;
         }
+
+        core.DisableGroundCheck = true;
+        core.holdingJump = true;
+
     }
 
     public override void UpdateMethod()
@@ -75,7 +92,7 @@ public class Player_Jumping : Player_State
 
                 /// Handle each stage of jumping
                 core.JumpCombo += 1;
-             
+
                 if (core.postGroundPoundJumpPossible)
                 {
                     core.JumpCombo = 3;
@@ -83,20 +100,20 @@ public class Player_Jumping : Player_State
 
                 if (core.JumpCombo == 1)
                 {
-                    core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.blue);
+
                     CurrentJumpHeight = 25f;
                     core.animator.SetBool("Jump_1", true);
                 }
                 if (core.JumpCombo == 2)
                 {
-                    core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.magenta);
+
                     CurrentJumpHeight = 26f;
                     core.animator.SetBool("Jump_2", true);
                 }
                 if (core.JumpCombo == 3)
                 {
-                    core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
-                   
+
+
                     CurrentJumpHeight = 35f;
                 }
 

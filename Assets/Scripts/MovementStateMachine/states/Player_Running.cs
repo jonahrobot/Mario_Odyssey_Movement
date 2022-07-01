@@ -23,7 +23,17 @@ public class Player_Running : Player_State
     {
         this.core = core;
     }
-
+    public override void CheckForStateSwap()
+    {
+        if (core.isPressingCrouch)
+        {
+            core.SwapState(new Player_Crouch(core));
+        }
+        if (core.isPressingSpace)
+        {
+            core.SwapState(new Player_Jumping(core));
+        }
+    }
     public override void ExitMethod()
     {
         CurrentSprintSpeed = BaseSprintSpeed;
@@ -35,22 +45,14 @@ public class Player_Running : Player_State
     {
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
-        if (core.sB != "JUMP")
-        {
+   
             core.animator.SetBool("Run", true);
-            core.animator.SetBool("Jump_1", false);
-            core.animator.SetBool("Jump_2", false);
-        }
+        
     }
 
     public override void UpdateMethod()
     {
-        if (core.sB != "JUMP")
-        {
-            core.animator.SetBool("Run", true);
-            core.animator.SetBool("Jump_1", false);
-            core.animator.SetBool("Jump_2", false);
-        }
+   
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.Camera.eulerAngles.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
        
@@ -97,7 +99,7 @@ public class Player_Running : Player_State
                 MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
 
                 // Don't adjust angle if jumping down hill.
-                if (core.sB != "JUMP" && core.sB != "ROLL") { return adjustVel; }
+                return adjustVel; 
             }
             else if (adjustVel.y > 0.2f) // Player Running Up Hill
             {

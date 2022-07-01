@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-// Data type for each state in player movement state machine.
+/*
+// Data t
+// ype for each state in player movement state machine.
 public struct State
 {
     public enum State_Types { IDLE, RUN, GROUND, JUMP, CROUCH, CROUCHJUMP, GROUNDPOUND, LONGJUMP, ROLL }
@@ -37,12 +38,12 @@ public struct State
         return currentStateTag.ToString();
     }
 }
-
+*/
 
 public class PlayerStateMachineCore : MonoBehaviour
 {
     // States
-    private State sJumping;
+   /* private State sJumping;
     private State sGrounded;
     private State sIdle;
     private State sRunning;
@@ -54,7 +55,7 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     // Core State Trackers 
     public State sA; // ( Idle, Running, Crouch, Roll)
-    public State sB; // ( Grounded, Jumping, Crouch Jump, Ground Pound, Long Jump )
+    public State sB; // ( Grounded, Jumping, Crouch Jump, Ground Pound, Long Jump )*/
 
     // User Inputs
     public Vector2 movementInput;
@@ -62,12 +63,19 @@ public class PlayerStateMachineCore : MonoBehaviour
     public bool isGrounded;
     public float isCrouching;
 
+
+    // Readable inputs to transition with (TEMP)
+    public bool isPressingCrouch;
+    public bool isPressingSpace;
+    public bool isPressingWSAD;
+    public Player_State currentStateEX;
+
     // Component Referencing
     public Transform Camera;
     public Transform GroundCheck;
     public LayerMask GroundMask;
-    public GameObject Head;
     public Animator animator;
+    public GameObject Model;
 
     [HideInInspector] public InputMaster InputController;
     [HideInInspector] public CharacterController Character;
@@ -88,12 +96,12 @@ public class PlayerStateMachineCore : MonoBehaviour
     [HideInInspector] public bool postGroundPoundJumpPossible = false;
     [HideInInspector] public Vector3 LongJumpDirection;
 
-    private bool longJumpWindow = false;
+    public bool longJumpWindow = false;
 
     // Private Variables
     float GroundCheckDistance = 0.4f;
-    bool holdingJump = false;
-    Coroutine reset = null;
+    public bool holdingJump = false;
+    public Coroutine reset = null;
     bool delayedGroundPoundFlip = false;
     
 
@@ -102,20 +110,22 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         // State Referencing
 
-        sJumping = new State(State.State_Types.JUMP, new Player_Jumping(this));
-        sGrounded = new State(State.State_Types.GROUND, new Player_Grounded(this));
-        sIdle = new State(State.State_Types.IDLE, new Player_Idle(this));
-        sRunning = new State(State.State_Types.RUN, new Player_Running(this));
-        sCrouch = new State(State.State_Types.CROUCH, new Player_Crouch(this));
-        sCrouchJump = new State(State.State_Types.CROUCHJUMP, new Player_CrouchJump(this));
-        sGroundPound = new State(State.State_Types.GROUNDPOUND, new Player_GroundPound(this));
-        sLongJump = new State(State.State_Types.LONGJUMP, new Player_Long_Jump(this));
-        sRoll = new State(State.State_Types.ROLL, new Player_Rolling(this));
+        /* sJumping = new State(State.State_Types.JUMP, new Player_Jumping(this));
+         sGrounded = new State(State.State_Types.GROUND, new Player_Grounded(this));
+         sIdle = new State(State.State_Types.IDLE, new Player_Idle(this));
+         sRunning = new State(State.State_Types.RUN, new Player_Running(this));
+         sCrouch = new State(State.State_Types.CROUCH, new Player_Crouch(this));
+         sCrouchJump = new State(State.State_Types.CROUCHJUMP, new Player_CrouchJump(this));
+         sGroundPound = new State(State.State_Types.GROUNDPOUND, new Player_GroundPound(this));
+         sLongJump = new State(State.State_Types.LONGJUMP, new Player_Long_Jump(this));
+         sRoll = new State(State.State_Types.ROLL, new Player_Rolling(this));
 
-        sA = sIdle;
-        sB = sGrounded;
+         sA = sIdle;
+         sB = sGrounded;*/
 
         // Component Referencing
+        currentStateEX = new Player_Idle(this);
+        currentStateEX.StartMethod();
 
         Character = GetComponent<CharacterController>();
         InputController = new InputMaster();
@@ -132,6 +142,7 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void Update()
     {
+
         /// Input Tracking
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
         jumpInput = InputController.Player.Jump.ReadValue<float>();
@@ -139,11 +150,19 @@ public class PlayerStateMachineCore : MonoBehaviour
 
         isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
 
+        isPressingCrouch = isCrouching == 1f;
+        isPressingSpace = jumpInput == 1f;
+        isPressingWSAD = movementInput.magnitude >= 0.2f;
+
+        if(isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD)
+        {
+            SwapState(new Player_Idle(this));
+        }
 
         // holdingJump prevents repeated ghost jumps
         if (jumpInput == 0f) { holdingJump = false; }
 
-
+        /*
         /// State Triggers
 
         // Jumping (sB)
@@ -219,7 +238,7 @@ public class PlayerStateMachineCore : MonoBehaviour
             sA = switchState(sA, sCrouch);
         }
 
-
+        */
 
 
 
@@ -227,8 +246,11 @@ public class PlayerStateMachineCore : MonoBehaviour
 
         VelocityChange = RateOfGravity * Time.deltaTime;
 
-        sA.getScript().UpdateMethod();
-        sB.getScript().UpdateMethod();
+        currentStateEX.CheckForStateSwap();
+        currentStateEX.UpdateMethod();
+
+        //sA.getScript().UpdateMethod();
+        //sB.getScript().UpdateMethod();
 
         // Reset Velocity when grounded, else update velocity!
 
@@ -254,19 +276,19 @@ public class PlayerStateMachineCore : MonoBehaviour
     /// Helper Methods
 
     // Swap States
-    private State switchState(State c, State newState)
+    /*private State switchState(State c, State newState)
     {
         c.getScript().ExitMethod();
         newState.getScript().StartMethod();
         return newState;
-    }
+    }*/
 
     // Reset Jumping Combo Tracker
     IEnumerator ResetJumpCount()
     {
         yield return new WaitForSeconds(0.2f);
         JumpCombo = 0;
-        Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.white);
+        //Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.white);
     }
 
     // Delay Ground Pound
@@ -300,5 +322,11 @@ public class PlayerStateMachineCore : MonoBehaviour
         longJumpWindow = true;
         yield return new WaitForSeconds(0.2f);
         longJumpWindow = false;
+    }
+    public void SwapState(Player_State input)
+    {
+        currentStateEX.ExitMethod();
+        currentStateEX = input;
+        currentStateEX.StartMethod();
     }
 }

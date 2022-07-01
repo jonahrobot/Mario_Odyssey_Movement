@@ -10,7 +10,22 @@ public class Player_Idle : Player_State
     {
         this.core = core; 
     }
-
+    public override void CheckForStateSwap()
+    {
+        if (core.isPressingSpace)
+        {
+            core.SwapState(new Player_Jumping(core));
+        }
+        if (core.isPressingWSAD)
+        {
+            core.SwapState(new Player_Running(core));
+            Debug.Log("RUNNING SWAP");
+        }
+        if (core.isPressingCrouch)
+        {
+            core.SwapState(new Player_Crouch(core));
+        }
+    }
     public override void ExitMethod()
     {
     }

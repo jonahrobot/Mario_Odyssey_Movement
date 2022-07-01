@@ -18,10 +18,23 @@ public class Player_CrouchJump : Player_State
     // Trackers 
     bool Setup;
     float turnSmoothVelocity;
+    bool ReleasedCrouch;
 
     public Player_CrouchJump(PlayerStateMachineCore core)
     {
         this.core = core;
+    }
+
+    public override void CheckForStateSwap()
+    {
+        if (core.isGrounded)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
+        if (core.isPressingCrouch && ReleasedCrouch)
+        {
+            core.SwapState(new Player_GroundPound(core));
+        }
     }
 
     public override void ExitMethod()
@@ -33,10 +46,16 @@ public class Player_CrouchJump : Player_State
     public override void StartMethod()
     {
         core.DisableGroundCheck = true;
+        core.holdingJump = true;
+        core.DisableGroundCheck = true;
     }
 
     public override void UpdateMethod()
     {
+        if (!core.isPressingCrouch)
+        {
+            ReleasedCrouch = true;
+        }
         if (core.movementInput.magnitude <= 0.1f)
         {
             MoveBackwards();
@@ -46,7 +65,7 @@ public class Player_CrouchJump : Player_State
         {
             if (core.Velocity.y < JumpVelocity)
             {
-                core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
+               // core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.red);
                 core.animator.SetBool("LongJump", true);
                 CurrentJumpHeight = 32f;
 

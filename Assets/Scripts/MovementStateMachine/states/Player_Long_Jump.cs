@@ -23,17 +23,32 @@ public class Player_Long_Jump : Player_State
     {
         this.core = core;
     }
-
+    public override void CheckForStateSwap()
+    {
+        if (core.isGrounded)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
+    }
     public override void ExitMethod()
     {
         // Reset Tracker
+       
+        core.animator.SetBool("LongJump", false);
         Setup = false;
     }
 
     public override void StartMethod()
     {
         Debug.Log("LONGJUMPING");
+        foreach (AnimatorControllerParameter parameter in core.animator.parameters)
+        {
+            core.animator.SetBool(parameter.name, false);
+        }
+        core.animator.SetBool("LongJump", true);
         core.DisableGroundCheck = true;
+        core.DisableGroundCheck = true;
+        core.holdingJump = true;
     }
 
     public override void UpdateMethod()
@@ -45,7 +60,7 @@ public class Player_Long_Jump : Player_State
         {
             if (core.Velocity.y < JumpVelocity)
             {
-                core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.yellow);
+               // core.Head.GetComponent<SkinnedMeshRenderer>().material.SetColor("_Color", Color.yellow);
                 //core.animator.SetBool("jumpAnimation", true);
                 CurrentJumpHeight = 15f;
 

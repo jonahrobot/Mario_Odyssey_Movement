@@ -12,7 +12,10 @@ public class Player_Grounded : Player_State
         this.core = core;
     }
 
-
+    public override void CheckForStateSwap()
+    {
+        // Leaf State
+    }
     public override void ExitMethod()
     {
     }
