@@ -6,6 +6,8 @@ public class Player_GroundPound : Player_State
 {
     PlayerStateMachineCore core;
     float SavedRateOfGravity = 0f;
+    float startTime;
+    bool GroundPoundFall;
 
     public Player_GroundPound(PlayerStateMachineCore core)
     {
@@ -22,25 +24,27 @@ public class Player_GroundPound : Player_State
     {
         core.ChangeAnimationState("GroundPound", false);
 
-        core.StartCoroutine("PostGroundPoundJump");
-        core.GroundPoundFall = false;
+        core.stateMemory.StoreFloat("GroundPoundExitTime", Time.time);
         core.EnableGravity(true);
     }
 
     public override void StartMethod()
     {
+        startTime = Time.time;
         core.ChangeAnimationState("GroundPound", true);
 
-        core.GroundPoundFall = false;
-
-        core.StartCoroutine("GroundPoundDelay");
+        GroundPoundFall = false;
         core.EnableGravity(false);
         
     }
 
     public override void UpdateMethod()
     {
-
+        if(Time.time - startTime > 0.2f && GroundPoundFall ==false)
+        {
+            core.EnableGravity(true);
+            GroundPoundFall = true;
+        }
         
 
         if (core.DisableGroundCheck == true)
@@ -51,7 +55,7 @@ public class Player_GroundPound : Player_State
 
     public override float GetUpdateToGravity()
     {
-        if (core.GroundPoundFall == true)
+        if (GroundPoundFall == true)
         {
             return 8f;
         }

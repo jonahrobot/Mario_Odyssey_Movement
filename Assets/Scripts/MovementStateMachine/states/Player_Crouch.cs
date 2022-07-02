@@ -42,7 +42,6 @@ public class Player_Crouch : Player_State
     public override void StartMethod()
     {
         core.ChangeAnimationState("Crouch", true);
-        core.longJumpWindow = true;
     }
 
     public override void UpdateMethod()

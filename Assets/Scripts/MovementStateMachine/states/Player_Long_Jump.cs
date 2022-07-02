@@ -97,7 +97,8 @@ public class Player_Long_Jump : Player_State
         
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
-        core.LongJumpDirection = Direction;
+        core.stateMemory.StoreVector3("LongJumpDirection", Direction);
+      
         
         Direction = SlopeFix(Direction, core.transform.position);
 
