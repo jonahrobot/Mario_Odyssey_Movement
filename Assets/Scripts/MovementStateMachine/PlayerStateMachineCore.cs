@@ -4,66 +4,60 @@ using UnityEngine;
 
 public class PlayerStateMachineCore : MonoBehaviour
 {
+    // Player Context
 
-    // Used by every State
+    public bool DisableGroundCheck;
     public bool isPressingCrouch;
     public bool isPressingSpace;
     public bool isPressingWSAD;
-
-    public Vector2 movementInput;
     public bool isGrounded;
 
+    public Vector2 movementInput;
     public Vector3 CameraRotation;
 
-    public Player_Timers stateMemory;
+    // Component Refrences 
 
-    // Only State Editable in public
-    public bool DisableGroundCheck;
-
-    // Used Internally 
-    private Transform Camera;
     private Animator Animator;
+    private Transform Camera;
     private Transform GroundCheck;
-    [SerializeField] private LayerMask GroundMask;
     private InputMaster InputController;
     private CharacterController Character;
+    [SerializeField] private LayerMask GroundMask;
 
-    private Player_State currentStateEX;
-    private float VelocityChange;
+    // Movement Stats
+
+    private Vector3 Velocity;
+    private float RateOfGravity = -50f;
+    private float GroundCheckDistance = 0.4f;
     private bool UsingGravity = true;
 
-    private float RateOfGravity = -50f;
-    private Vector3 Velocity;
+    // State Info
 
-    
-
-    
-
-
-    // Private Variables
-    float GroundCheckDistance = 0.4f;
-    public bool holdingJump = false;
-
-
-    
-
+    public Player_Timers stateMemory;
+    private Player_State currentState;
+    private bool SwappedThisFrame;
 
     private void Awake()
     {
-        // Component Referencing
-        stateMemory = new Player_Timers();
-
-
-        Camera = GameObject.Find("Camera").transform;
+        // Get Components
+       
         GroundCheck = GameObject.Find("GroundCheck").transform;
-        currentStateEX = new Player_Idle(this);
-        currentStateEX.StartMethod();
 
         Character = GetComponent<CharacterController>();
-        InputController = new InputMaster();
-        InputController.Enable();
 
         Animator = GetComponentInChildren<Animator>();
+
+        Camera = GameObject.Find("Camera").transform;
+       
+        // Create Instances
+
+        stateMemory = new Player_Timers();
+
+        currentState = new Player_Idle(this);
+        currentState.StartMethod();
+
+        InputController = new InputMaster();
+        InputController.Enable();
 
         // Initial Setup
         Velocity = new Vector3(0f, -2f, 0f);
@@ -71,7 +65,48 @@ public class PlayerStateMachineCore : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Confined;
     }
-    private void ReadInputs()
+
+
+    private void Update()
+    {
+        SwappedThisFrame = false;
+
+        UpdatePlayerContext();
+
+        // If no inputs, default state is idle
+        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD)
+        {
+            SwapState(new Player_Idle(this));
+        }
+
+        currentState.CheckForStateSwap();
+        currentState.UpdateMethod();
+
+        UpdateMovePlayer();
+    }
+
+    private void UpdateMovePlayer()
+    {
+        if (isGrounded && DisableGroundCheck == false)
+        {
+            Velocity.y = -2f;
+        }
+        else
+        {
+            // Falling so increase gravity
+
+            float DeltaV = RateOfGravity * Time.deltaTime;
+            float GravityUpdate = currentState.GetUpdateToGravity();
+
+            if (GravityUpdate != 0) { DeltaV *= GravityUpdate; }
+
+            Velocity.y += DeltaV;
+        }
+
+        if (UsingGravity){ Character.Move(Velocity * Time.deltaTime); }
+    }
+    
+    private void UpdatePlayerContext()
     {
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
 
@@ -84,57 +119,17 @@ public class PlayerStateMachineCore : MonoBehaviour
         CameraRotation = Camera.eulerAngles;
     }
 
-    private void Update()
-    {
-        ReadInputs();
-
-        if(isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD)
-        {
-            SwapState(new Player_Idle(this));
-        }
-
-        // holdingJump prevents repeated ghost jumps
-        if (!isPressingSpace) { holdingJump = false; }
-
-        VelocityChange = RateOfGravity * Time.deltaTime;
-
-        currentStateEX.CheckForStateSwap();
-        currentStateEX.UpdateMethod();
-
-        float GravityUpdate = currentStateEX.GetUpdateToGravity();
-
-        if(GravityUpdate != 0)
-        {
-            VelocityChange *= GravityUpdate;
-        }
-
-        // Reset Velocity when grounded, else update velocity!
-
-        if (isGrounded && DisableGroundCheck == false)
-        {
-            Velocity.y = -2f;
-        }
-        else
-        {
-            Velocity.y += VelocityChange;
-        }
-
-        if (UsingGravity)
-        {
-            Character.Move(Velocity * Time.deltaTime);
-        }
-
-        /// Ground Pound Animation Handler
-   
-    }
-
     /// Helper Methods
 
     public void SwapState(Player_State input)
     {
-        currentStateEX.ExitMethod();
-        currentStateEX = input;
-        currentStateEX.StartMethod();
+        if (SwappedThisFrame == false)
+        {
+            currentState.ExitMethod();
+            currentState = input;
+            currentState.StartMethod();
+            SwappedThisFrame = true;
+        }
     }
 
     public void ChangeAnimationState(string animation, bool newState)

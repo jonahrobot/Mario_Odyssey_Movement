@@ -18,6 +18,7 @@ public class Player_GroundPound : Player_State
         if (core.isGrounded)
         {
             core.SwapState(new Player_Idle(core));
+            return;
         }
     }
     public override void ExitMethod()

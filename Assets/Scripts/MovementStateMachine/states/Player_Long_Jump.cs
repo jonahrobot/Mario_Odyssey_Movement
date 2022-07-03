@@ -45,7 +45,7 @@ public class Player_Long_Jump : Player_State
         core.ChangeAnimationState("LongJump", true);
         core.DisableGroundCheck = true;
         core.DisableGroundCheck = true;
-        core.holdingJump = true;
+  
     }
 
     public override void UpdateMethod()

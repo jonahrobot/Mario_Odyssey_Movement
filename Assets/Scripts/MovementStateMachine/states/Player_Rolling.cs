@@ -44,14 +44,10 @@ public class Player_Rolling : Player_State
     {
         core.ChangeAnimationState("Roll", true);
 
-        var LongJumpDir = core.stateMemory.GetVector3("LongJumpDirection");
-        if (LongJumpDir != null)
-        {
-            CurrentDirection = (Vector3) LongJumpDir;
-        }
-        else {
-            CurrentDirection = Vector3.zero;
-        }
+        var LongJumpDir = core.stateMemory.GetVector3("LongJumpDirection", Vector3.zero);
+
+        CurrentDirection = LongJumpDir;
+
         CurrentSprintSpeed = BaseSprintSpeed;
         MaxSprintSpeed = DefaultMaxSprintSpeed;
         GoingUpHill = false;

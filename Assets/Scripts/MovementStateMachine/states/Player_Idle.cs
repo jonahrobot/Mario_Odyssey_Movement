@@ -15,15 +15,17 @@ public class Player_Idle : Player_State
         if (core.isPressingSpace)
         {
             core.SwapState(new Player_Jumping(core));
+            return;
         }
         if (core.isPressingWSAD)
         {
             core.SwapState(new Player_Running(core));
-            Debug.Log("RUNNING SWAP");
+            return;
         }
         if (core.isPressingCrouch)
         {
             core.SwapState(new Player_Crouch(core));
+            return;
         }
     }
     public override void ExitMethod()

@@ -27,14 +27,17 @@ public class Player_CrouchJump : Player_State
 
     public override void CheckForStateSwap()
     {
-        if (core.isGrounded)
-        {
-            core.SwapState(new Player_Idle(core));
-        }
         if (core.isPressingCrouch && ReleasedCrouch)
         {
             core.SwapState(new Player_GroundPound(core));
+            return;
         }
+        if (core.isGrounded)
+        {
+            core.SwapState(new Player_Idle(core));
+            return;
+        }
+       
     }
 
     public override void ExitMethod()
@@ -46,7 +49,7 @@ public class Player_CrouchJump : Player_State
     public override void StartMethod()
     {
         core.DisableGroundCheck = true;
-        core.holdingJump = true;
+     
         core.DisableGroundCheck = true;
     }
 

@@ -28,10 +28,12 @@ public class Player_Running : Player_State
         if (core.isPressingCrouch)
         {
             core.SwapState(new Player_Crouch(core));
+            return;
         }
         if (core.isPressingSpace)
         {
             core.SwapState(new Player_Jumping(core));
+            return;
         }
     }
     public override void ExitMethod()
