@@ -16,6 +16,7 @@ public class Player_Jumping : Player_State
     // Constants
     private float CurrentJumpState;
     private bool StoppedMovingDuringJump;
+    private bool LeftGround;
 
     // Refrences
     private Player_Timers data;
@@ -111,6 +112,10 @@ public class Player_Jumping : Player_State
         {
             data.StoreBool("StoppedMovingDuringJump", true);
         }
+        if (core.isGrounded == false)
+        {
+            LeftGround = true;
+        }
     }
 
     public override float GetUpdateToGravity()
@@ -164,7 +169,7 @@ public class Player_Jumping : Player_State
             core.SwapState(new Player_GroundPound(core));
             return;
         }
-        if (core.isGrounded)
+        if (core.isGrounded && LeftGround)
         {
             core.SwapState(new Player_Idle(core));
             return;

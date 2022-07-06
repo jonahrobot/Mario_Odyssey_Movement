@@ -87,7 +87,9 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void UpdateMovePlayer()
     {
-        if (isGrounded && DisableGroundCheck == false)
+        var TouchingGround = isGrounded && DisableGroundCheck == false;
+
+        if (TouchingGround)
         {
             Velocity.y = -2f;
         }
@@ -103,7 +105,10 @@ public class PlayerStateMachineCore : MonoBehaviour
             Velocity.y += DeltaV;
         }
 
-        if (UsingGravity){ Character.Move(Velocity * Time.deltaTime); }
+        if (UsingGravity)
+        { 
+            Character.Move(Velocity * Time.deltaTime); 
+        }
     }
     
     private void UpdatePlayerContext()
@@ -131,7 +136,6 @@ public class PlayerStateMachineCore : MonoBehaviour
             SwappedThisFrame = true;
         }
     }
-
     public void ChangeAnimationState(string animation, bool newState)
     {
         Animator.SetBool(animation, newState);

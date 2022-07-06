@@ -4,25 +4,91 @@ using UnityEngine;
 
 public class Player_Running : Player_State
 {
-    // Adjustable Stats
-    private float BaseSprintSpeed = 15f;
-    private float DefaultMaxSprintSpeed = 25f;
-
-    // Constants
-    private float SprintAcceleration = 1.00125f;
-    private float TurnSpeed = 0.1f;
-
-    // References and Trackers
     PlayerStateMachineCore core;
 
+    // Movement
+    private float CurrentSpeed = 15f;
+    private float MaxSpeed = 25f;
+    private float SprintAcceleration = 1.00125f;
+
+    // Reference Var
     float turnSmoothVelocity;
-    float CurrentSprintSpeed;
-    float MaxSprintSpeed;
+    float MaxSpeedOriginal;
 
     public Player_Running(PlayerStateMachineCore core)
     {
         this.core = core;
     }
+
+    public override void StartMethod()
+    {
+        MaxSpeedOriginal = MaxSpeed;
+        core.ChangeAnimationState("Run", true);
+    }
+
+    public override void UpdateMethod()
+    {
+        if (CurrentSpeed < MaxSpeed)
+        {
+            CurrentSpeed *= SprintAcceleration;
+        }
+        else
+        {
+            CurrentSpeed /= SprintAcceleration;
+        }
+
+        var Direction = GetCurrentDirection();
+
+        Direction = AlignVectorToTerrainSlope(Direction, core.transform.position);
+
+        UpdateSpeedBasedOnVelocity(Direction);
+
+        core.MovePlayer(Direction, CurrentSpeed);
+    }
+    private Vector3 GetCurrentDirection()
+    {
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
+
+        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+
+        var CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+
+        return CurrentDirection;
+    }
+    private void UpdateSpeedBasedOnVelocity(Vector3 CurrentVelocity)
+    {
+        var Velocity = CurrentVelocity.y;
+        bool GoingDownHill = Velocity < -0.2f;
+        bool GoingUpHill = Velocity > 0.2f;
+
+        if (GoingDownHill)
+        {
+            SprintAcceleration = 1.00125f + 0.00125f;
+            MaxSpeed = MaxSpeedOriginal + 8f;
+        }
+
+        if (GoingUpHill)
+        {
+            MaxSpeed = MaxSpeedOriginal - 4f;
+        }
+
+        if (!GoingDownHill && !GoingUpHill)
+        {
+            SprintAcceleration = 1.00125f;
+            MaxSpeed = MaxSpeedOriginal;
+        }
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
+    }
+
+    public override void ExitMethod()
+    {
+        core.ChangeAnimationState("Run", false);
+    }
+
     public override void CheckForStateSwap()
     {
         if (core.isPressingCrouch)
@@ -36,91 +102,21 @@ public class Player_Running : Player_State
             return;
         }
     }
-    public override void ExitMethod()
+
+    /// Helper Methods
+
+    private Vector3 AlignVectorToTerrainSlope(Vector3 VectorToAlign, Vector3 currentPosition)
     {
-        CurrentSprintSpeed = BaseSprintSpeed;
-        MaxSprintSpeed = DefaultMaxSprintSpeed;
+        var raycast = new Ray(currentPosition, Vector3.down);
+        var raycastFoundGround = Physics.Raycast(raycast, out RaycastHit hitInfo, 200f);
 
-        core.ChangeAnimationState("Run", false);
-    }
-
-    public override void StartMethod()
-    {
-        CurrentSprintSpeed = BaseSprintSpeed;
-        MaxSprintSpeed = DefaultMaxSprintSpeed;
-
-        core.ChangeAnimationState("Run", true);
-
-    }
-
-    public override void UpdateMethod()
-    {
-
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
-        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-
-        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
-
-        Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
-
-        // Accelerate player
-        if (CurrentSprintSpeed < MaxSprintSpeed)
+        if (raycastFoundGround == false)
         {
-            CurrentSprintSpeed *= SprintAcceleration;
-        }
-        else
-        {
-            // If current speed higher than max, slow player down!
-            CurrentSprintSpeed /= SprintAcceleration;
+            return VectorToAlign;
         }
 
-        Direction = SlopeFix(Direction, core.transform.position);
+        var AngleOfCorrection = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
 
-        core.MovePlayer(Direction, CurrentSprintSpeed);
-    }
-
-    // If player on slope, adjust running speed
-    private Vector3 SlopeFix(Vector3 v, Vector3 pos)
-    {
-        //Debug.Log(v);
-
-        var raycast = new Ray(pos, Vector3.down);
-
-        if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
-        {
-            Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
-
-            var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
-
-            var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-
-            /// Adjust for steepness of slopes
-
-            if (adjustVel.y < -0.2f) // Player Running Down Hill
-            {
-                SprintAcceleration = 1.00125f + 0.00125f;
-                MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
-
-                // Don't adjust angle if jumping down hill.
-                return adjustVel;
-            }
-            else if (adjustVel.y > 0.2f) // Player Running Up Hill
-            {
-                MaxSprintSpeed = DefaultMaxSprintSpeed - 4f;
-                return adjustVel;
-            }
-            else // At Flat Ground
-            {
-                SprintAcceleration = 1.00125f;
-                MaxSprintSpeed = DefaultMaxSprintSpeed;
-            }
-        }
-
-        // If no adjustments made, return the old velocity
-        return v;
-    }
-    public override float GetUpdateToGravity()
-    {
-        return 0;
+        return AngleOfCorrection * VectorToAlign;
     }
 }
