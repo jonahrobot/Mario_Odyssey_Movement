@@ -155,7 +155,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         return Velocity;
     }
-
+    
     public void SetVerticalVelocity(float newYVelocity)
     {
         Velocity = new Vector3(Velocity.x, newYVelocity, Velocity.z);

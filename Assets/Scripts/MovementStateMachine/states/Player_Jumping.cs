@@ -130,13 +130,13 @@ public class Player_Jumping : Player_State
 
         if (JumpReachedShortApex && ReleasedJumpEarly == true && MaxJump == false)
         {
-            SetGroundCheck(true);
+            core.DisableGroundCheck = false;
             return GravityOnShortFall;
         }
 
         if (JumpReachedApex && ReleasedJumpEarly == false)
         {
-            SetGroundCheck(true);
+            core.DisableGroundCheck = false;
             return GravityOnFall;
         }
 
@@ -152,15 +152,10 @@ public class Player_Jumping : Player_State
         // Save Jump Time to keep track of the jump cooldown
         data.StoreFloat("TimeSinceLastJump", Time.time);
 
-        SetGroundCheck(true);
+        core.DisableGroundCheck = false;
     }
 
     /// Helper Methods
-
-    private void SetGroundCheck(bool value)
-    {
-        core.DisableGroundCheck = !value;
-    }
 
     public override void CheckForStateSwap()
     {

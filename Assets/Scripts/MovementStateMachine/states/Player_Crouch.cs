@@ -4,33 +4,70 @@ using UnityEngine;
 
 public class Player_Crouch : Player_State
 {
-    // Adjustable Stats
-    private float Speed = 5f;
+    private PlayerStateMachineCore core;
 
-    // Constants
-    private float TurnSpeed = 0.1f;
+    // Movement
+    private float CrouchSpeed = 5f;
+    private bool  walking;
 
-    // References and Trackers
-    PlayerStateMachineCore core;
+    // Refrences
+    private float turnSmoothVelocity;
+    private float timeSinceCrouch;
 
-    float turnSmoothVelocity;
-
-    bool walking;
     public Player_Crouch(PlayerStateMachineCore core)
     {
         this.core = core;
     }
 
-    public override void CheckForStateSwap()
+    public override void StartMethod()
     {
-        if (core.isPressingSpace)
+        core.ChangeAnimationState("Crouch", true);
+        timeSinceCrouch = Time.time;
+    }
+
+    public override void UpdateMethod()
+    {
+        Vector3 Direction = GetCurrentDirection();
+        Direction = AlignVectorToSlope(Direction, core.transform.position);
+
+        if (!walking && core.isPressingWSAD)
         {
-            core.SwapState(new Player_CrouchJump(core));
+            walking = true;
+            core.ChangeAnimationState("Crouch", false);
+            core.ChangeAnimationState("CrouchWalk", true);
         }
-        if (!core.isPressingCrouch)
+
+        if (walking && core.isPressingWSAD == false)
         {
-            core.SwapState(new Player_Idle(core));
+            walking = false;
+            core.ChangeAnimationState("Crouch", true);
+            core.ChangeAnimationState("CrouchWalk", false);
         }
+
+        if (walking)
+        {
+            core.MovePlayer(Direction, CrouchSpeed);
+        }
+    }
+
+    private Vector3 GetCurrentDirection()
+    {
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
+
+        Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+
+        if (core.isPressingWSAD)
+        {
+            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        }
+
+        return Direction;
+    }
+
+    public override float GetUpdateToGravity()
+    {
+        return 0;
     }
 
     public override void ExitMethod()
@@ -39,69 +76,24 @@ public class Player_Crouch : Player_State
         core.ChangeAnimationState("CrouchWalk", false);
     }
 
-    public override void StartMethod()
+    public override void CheckForStateSwap()
     {
-        core.ChangeAnimationState("Crouch", true);
-    }
+        bool notCrouchedTooLong = Time.time - timeSinceCrouch < 0.3f;
 
-    public override void UpdateMethod()
-    {
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
-        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-
-        Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
-
-        Direction = SlopeFix(Direction, core.transform.position);
-
-        if (core.movementInput.magnitude > 0.1f)
+        if (core.isPressingSpace && notCrouchedTooLong == false)
         {
-            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
-            core.MovePlayer(Direction, Speed);
-
-            if (walking == false)
-            {
-                core.ChangeAnimationState("Crouch", false);
-                core.ChangeAnimationState("CrouchWalk", true);
-                walking = true;
-            }
-        }
-        else
-        {
-            if (walking == true)
-            {
-                core.ChangeAnimationState("CrouchWalk", false);
-                core.ChangeAnimationState("Crouch", true);
-                walking = false;
-            }
-        }
-    }
-
-    // If player on slope, adjust running speed
-    private Vector3 SlopeFix(Vector3 v, Vector3 pos)
-    {
-
-        var raycast = new Ray(pos, Vector3.down);
-
-        if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
-        {
-            var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
-
-            var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-
-            /// Adjust for steepness of slopes
-
-            if (adjustVel.y < -0.2f || adjustVel.y > 0.2f) // Going Down Slope, Adjust Direction
-            {
-                return adjustVel;
-            }
+            core.SwapState(new Player_CrouchJump(core));
         }
 
-        // If no adjustments made, return the old velocity
-        return v;
-    }
-    public override float GetUpdateToGravity()
-    {
-        return 0;
+        if (core.isPressingSpace && notCrouchedTooLong)
+        {
+            core.SwapState(new Player_Long_Jump(core));
+        }
+
+        if (!core.isPressingCrouch)
+        {
+            core.SwapState(new Player_Idle(core));
+        }
     }
 }
 

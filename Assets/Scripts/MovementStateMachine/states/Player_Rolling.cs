@@ -4,189 +4,120 @@ using UnityEngine;
 
 public class Player_Rolling : Player_State
 {
-    // Adjustable Stats
-    private float BaseSprintSpeed = 35f;
-    private float DefaultMaxSprintSpeed = 45f;
-
-    // Constants
-    private float SprintAcceleration = 1.00125f;
-    private float TurnSpeed = 0.1f;
-
-    // References and Trackers
     PlayerStateMachineCore core;
 
-    float turnSmoothVelocity;
-    float CurrentSprintSpeed;
-    float MaxSprintSpeed;
+    // Movement
+    private float CurrentSpeed = 15f;
+    private float MaxSpeed = 33f;
+    private float SprintAcceleration = 1.0025f;
 
-    bool GoingUpHill;
-    bool OnFlatGround;
+    // Refrences
+    float turnSmoothVelocity;
     Vector3 CurrentDirection;
 
     public Player_Rolling(PlayerStateMachineCore core)
     {
         this.core = core;
     }
-    public override void CheckForStateSwap()
-    {
-        //leaf node
-    }
-    public override void ExitMethod()
-    {
-        CurrentSprintSpeed = BaseSprintSpeed;
-        MaxSprintSpeed = DefaultMaxSprintSpeed;
-        GoingUpHill = false;
-        OnFlatGround = false;
-        core.ChangeAnimationState("Roll", false);
-    }
 
     public override void StartMethod()
     {
         core.ChangeAnimationState("Roll", true);
 
-        var LongJumpDir = core.stateMemory.GetVector3("LongJumpDirection", Vector3.zero);
-
-        CurrentDirection = LongJumpDir;
-
-        CurrentSprintSpeed = BaseSprintSpeed;
-        MaxSprintSpeed = DefaultMaxSprintSpeed;
-        GoingUpHill = false;
-        OnFlatGround = false;
+        CurrentDirection = core.stateMemory.GetVector3("LongJumpDirection", Vector3.zero);
     }
 
     public override void UpdateMethod()
     {
-        var reversedDirectonThisFrame = false;
-        Vector3 Direction = CurrentDirection;
+        UpdateDirectionAndSpeed(CurrentDirection);
 
-        float TargetAngle = Mathf.Atan2(Direction.x, Direction.z) * Mathf.Rad2Deg;
-        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, TurnSpeed);
-        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        UpdateRotation();
 
-        if (GoingUpHill == true)
+        // Slope Adjustment
+        Vector3 AlignedDirection = AlignVectorToSlope(CurrentDirection, core.transform.position);
+
+        bool OnSlope = AlignedDirection.y < -0.05f || AlignedDirection.y > 0.05f;
+
+        if (OnSlope)
         {
-            CurrentSprintSpeed -= 0.1125f;
-            CurrentSprintSpeed = Mathf.Clamp(CurrentSprintSpeed, 0, 100);
-            if (CurrentSprintSpeed == 0)
-            {
-                CurrentDirection = FindDirectionDownHill(core.transform.position);
-                reversedDirectonThisFrame = true;
-
-                CurrentSprintSpeed = 5f;
-                GoingUpHill = false;
-
-            }
+            CurrentDirection = AlignedDirection;
         }
-        else
+
+        core.MovePlayer(CurrentDirection, CurrentSpeed);
+    }
+
+    private void UpdateRotation()
+    {
+        float TargetAngle = Mathf.Atan2(CurrentDirection.x, CurrentDirection.z) * Mathf.Rad2Deg;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
+
+        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+    }
+
+    private void UpdateDirectionAndSpeed(Vector3 CurrentVelocity)
+    {
+        var Velocity = CurrentVelocity.y;
+        bool GoingDownHill = Velocity < -0.05f;
+        bool GoingUpHill = Velocity > 0.05f;
+
+        if (GoingDownHill)
         {
-            if (OnFlatGround)
+            // Accelerate player
+            if (CurrentSpeed < MaxSpeed)
             {
-                CurrentSprintSpeed -= 0.0025f;
-                CurrentSprintSpeed = Mathf.Clamp(CurrentSprintSpeed, 0, 100);
+                CurrentSpeed *= SprintAcceleration;
             }
             else
             {
-                // Accelerate player
-                if (CurrentSprintSpeed < MaxSprintSpeed)
-                {
-                    CurrentSprintSpeed *= SprintAcceleration;
-                }
-                else
-                {
-                    // If current speed higher than max, slow player down!
-                    CurrentSprintSpeed /= SprintAcceleration;
-                }
+                CurrentSpeed /= SprintAcceleration;
             }
         }
-        if (reversedDirectonThisFrame == false)
-        {
-            Direction = SlopeFix(Direction, core.transform.position);
 
-            core.MovePlayer(Direction, CurrentSprintSpeed);
+        if (GoingUpHill)
+        {
+            CurrentSpeed = Mathf.Clamp(CurrentSpeed - 0.1125f, 0, 100);
+
+            if (CurrentSpeed == 0)
+            {
+                CurrentDirection = FindDirectionDownHill(core.transform.position);
+                CurrentSpeed = 5f;
+            }
+        }
+
+        bool NotOnSlope = !GoingDownHill && !GoingUpHill;
+
+        if (NotOnSlope)
+        {
+            CurrentSpeed = Mathf.Clamp(CurrentSpeed - 0.0025f, 0, 100);
         }
     }
-
-
-    // If player on slope, adjust running speed
-    private Vector3 SlopeFix(Vector3 v, Vector3 pos)
-    {
-        //Debug.Log(v);
-
-        var raycast = new Ray(pos, Vector3.down);
-
-        if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
-        {
-            //Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.cyan);
-
-            var slopeRotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal); // The direction needed for correction
-
-            var adjustVel = slopeRotation * v; // This rotates the players direction vector to the direction perpendicular to the hill
-
-            /// Adjust for steepness of slopes
-            /// 
-            //Debug.Log("Velocity" + v);
-            //Debug.Log("Adjusted " + adjustVel);
-            if (adjustVel.y < -0.05f) // Player Running Down Hill
-            {
-                Debug.Log("Thinks its going down hill!");
-                GoingUpHill = false;
-                OnFlatGround = false;
-                SprintAcceleration = 1.00125f + 0.00125f;
-                MaxSprintSpeed = DefaultMaxSprintSpeed + 8f;
-
-                // Don't adjust angle if jumping down hill.
-                return adjustVel;
-            }
-            else if (adjustVel.y > 0.05f) // Player Running Up Hill
-            {
-                Debug.Log("Thinks its going up hill!");
-                GoingUpHill = true;
-                OnFlatGround = false;
-                return adjustVel;
-            }
-            else // At Flat Ground
-            {
-                Debug.Log("Thinks its FLAT GROUND");
-                OnFlatGround = true;
-                GoingUpHill = false;
-                SprintAcceleration = 1.00125f;
-                MaxSprintSpeed = DefaultMaxSprintSpeed;
-            }
-        }
-
-        // If no adjustments made, return the old velocity
-        return v;
-    }
-
 
     // Find and return the Vector3 that represents the slope down the hill relative from a given position
     private Vector3 FindDirectionDownHill(Vector3 pos)
     {
-
-        // Only works if on terrain
         var raycast = new Ray(pos, Vector3.down);
 
-        if (Physics.Raycast(raycast, out RaycastHit hitInfo, 200f))
+        var raycastFoundGround = Physics.Raycast(raycast, out RaycastHit hitInfo, 200f);
+
+        if (raycastFoundGround == false)
         {
-            // To start get the normal of the raycast without the y
-            Vector3 normalFlat = new Vector3(hitInfo.normal.x, 0f, hitInfo.normal.z);
-            return normalFlat;
-            // Find the angle between the normal and the flattened normal
-            var offsetAngle = Quaternion.FromToRotation(hitInfo.normal, normalFlat);
-
-            // Rotate our flattend normal by the offset to get our angle down the hill!
-            var downHillDirection = offsetAngle * normalFlat;
-
-            //Debug.DrawRay(hitInfo.point, normalFlat, Color.yellow);
-            // Debug.DrawRay(hitInfo.point, hitInfo.normal, Color.green);
-            //Debug.DrawRay(hitInfo.point, downHillDirection, Color.cyan);
-
-            //return downHillDirection;
+            return Vector3.zero;
         }
 
-        // If no adjustments made, return a empty Vector3
-        return Vector3.zero;
+        Vector3 DirectionDownHill = new Vector3(hitInfo.normal.x, 0f, hitInfo.normal.z);
+
+        return DirectionDownHill;
     }
+
+    public override void ExitMethod()
+    {
+        core.ChangeAnimationState("Roll", false);
+    }
+
+    public override void CheckForStateSwap()
+    {
+    }
+
     public override float GetUpdateToGravity()
     {
         return 0;

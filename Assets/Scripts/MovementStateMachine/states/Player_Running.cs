@@ -11,7 +11,7 @@ public class Player_Running : Player_State
     private float MaxSpeed = 25f;
     private float SprintAcceleration = 1.00125f;
 
-    // Reference Var
+    // Refrences
     float turnSmoothVelocity;
     float MaxSpeedOriginal;
 
@@ -28,6 +28,9 @@ public class Player_Running : Player_State
 
     public override void UpdateMethod()
     {
+        Vector3 Direction = GetCurrentDirection();
+        Vector3 AlignedDirection = AlignVectorToSlope(Direction, core.transform.position);
+
         if (CurrentSpeed < MaxSpeed)
         {
             CurrentSpeed *= SprintAcceleration;
@@ -37,13 +40,9 @@ public class Player_Running : Player_State
             CurrentSpeed /= SprintAcceleration;
         }
 
-        var Direction = GetCurrentDirection();
+        UpdateSpeedBasedOnVelocity(AlignedDirection);
 
-        Direction = AlignVectorToTerrainSlope(Direction, core.transform.position);
-
-        UpdateSpeedBasedOnVelocity(Direction);
-
-        core.MovePlayer(Direction, CurrentSpeed);
+        core.MovePlayer(AlignedDirection, CurrentSpeed);
     }
     private Vector3 GetCurrentDirection()
     {
@@ -101,22 +100,5 @@ public class Player_Running : Player_State
             core.SwapState(new Player_Jumping(core));
             return;
         }
-    }
-
-    /// Helper Methods
-
-    private Vector3 AlignVectorToTerrainSlope(Vector3 VectorToAlign, Vector3 currentPosition)
-    {
-        var raycast = new Ray(currentPosition, Vector3.down);
-        var raycastFoundGround = Physics.Raycast(raycast, out RaycastHit hitInfo, 200f);
-
-        if (raycastFoundGround == false)
-        {
-            return VectorToAlign;
-        }
-
-        var AngleOfCorrection = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
-
-        return AngleOfCorrection * VectorToAlign;
     }
 }

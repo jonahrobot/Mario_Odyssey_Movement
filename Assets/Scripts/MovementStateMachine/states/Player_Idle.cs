@@ -10,6 +10,19 @@ public class Player_Idle : Player_State
     {
         this.core = core;
     }
+    public override void StartMethod()
+    {
+    }
+    public override void UpdateMethod()
+    {
+    }
+    public override float GetUpdateToGravity()
+    {
+        return 0;
+    }
+    public override void ExitMethod()
+    {
+    }
     public override void CheckForStateSwap()
     {
         if (core.isPressingSpace)
@@ -27,20 +40,5 @@ public class Player_Idle : Player_State
             core.SwapState(new Player_Crouch(core));
             return;
         }
-    }
-    public override void ExitMethod()
-    {
-    }
-
-    public override void StartMethod()
-    {
-    }
-
-    public override void UpdateMethod()
-    {
-    }
-    public override float GetUpdateToGravity()
-    {
-        return 0;
     }
 }
