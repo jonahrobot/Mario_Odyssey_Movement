@@ -116,6 +116,10 @@ public class PlayerStateMachineCore : MonoBehaviour
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
 
         isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
+        if(DisableGroundCheck == true)
+        {
+            isGrounded = false;
+        }
 
         isPressingCrouch = InputController.Player.Crouch.ReadValue<float>() == 1f;
         isPressingSpace = InputController.Player.Jump.ReadValue<float>() == 1f;

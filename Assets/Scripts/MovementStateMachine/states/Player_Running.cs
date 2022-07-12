@@ -7,22 +7,25 @@ public class Player_Running : Player_State
     PlayerStateMachineCore core;
 
     // Movement
-    private float CurrentSpeed = 15f;
+    private float CurrentSpeed;
     private float MaxSpeed = 25f;
     private float SprintAcceleration = 1.00125f;
 
     // Refrences
-    float turnSmoothVelocity;
-    float MaxSpeedOriginal;
+    private float turnSmoothVelocity;
+    private float MaxSpeedOriginal;
+    private Player_Timers data;
 
     public Player_Running(PlayerStateMachineCore core)
     {
         this.core = core;
+        data = core.stateMemory;
     }
 
     public override void StartMethod()
     {
         MaxSpeedOriginal = MaxSpeed;
+        CurrentSpeed = data.GetFloat("CurrentSpeed", 15f);
         core.ChangeAnimationState("Run", true);
     }
 
@@ -85,6 +88,7 @@ public class Player_Running : Player_State
 
     public override void ExitMethod()
     {
+        data.StoreFloat("CurrentSpeed", CurrentSpeed);
         core.ChangeAnimationState("Run", false);
     }
 

@@ -9,6 +9,10 @@ public class Player_Jumping : Player_State
     private float GravityOnFall = 2.0f;
     private float GravityOnShortFall = 3.0f;
 
+    private float CurrentSpeed;
+    private float MaxSpeed = 25f;
+    private float SprintAcceleration = 1.00125f;
+
     // States of Jump
     private bool ReleasedJumpEarly = false;
     private bool MaxJump = false;
@@ -20,6 +24,7 @@ public class Player_Jumping : Player_State
 
     // Refrences
     private Player_Timers data;
+    private float turnSmoothVelocity;
 
     public Player_Jumping(PlayerStateMachineCore core)
     {
@@ -40,11 +45,22 @@ public class Player_Jumping : Player_State
     {
         CurrentJumpState = data.GetFloat("CurrentJumpState", 0);
 
+        CurrentSpeed = data.GetFloat("CurrentSpeed", 15f);
+
         StoppedMovingDuringJump = data.GetBool("StoppedMovingDuringJump", false);
     }
 
     private void UpdateCurrentJumpState()
     {
+        // Check for a Idle Triple Jump
+        var idleBeforeTripleJump = CurrentJumpState == 2 && StoppedMovingDuringJump;
+
+        if (idleBeforeTripleJump)
+        {
+            CurrentJumpState = 0;
+            data.StoreBool("StoppedMovingDuringJump", false);
+        }
+
         // Check for a Ground Pound Jump
         var lastGroundPoundTime = data.GetFloat("GroundPoundExitTime", 0);
         var secondsSinceGroundPound = Time.time - lastGroundPoundTime;
@@ -52,6 +68,7 @@ public class Player_Jumping : Player_State
         if (secondsSinceGroundPound < 0.3f)
         {
             CurrentJumpState = 2;
+            return;
         }
 
         // Check for a Jump Chain Break
@@ -61,15 +78,6 @@ public class Player_Jumping : Player_State
         if (secondsBetweenJumps > 0.3f)
         {
             CurrentJumpState = 0;
-        }
-
-        // Check for a Idle Triple Jump
-        var idleBeforeTripleJump = CurrentJumpState == 2 && StoppedMovingDuringJump;
-
-        if (idleBeforeTripleJump)
-        {
-            CurrentJumpState = 0;
-            data.StoreBool("StoppedMovingDuringJump", false);
         }
 
         // Handle Overflow
@@ -112,10 +120,38 @@ public class Player_Jumping : Player_State
         {
             data.StoreBool("StoppedMovingDuringJump", true);
         }
+        else
+        {
+            MidAirStrafe();
+        }
         if (core.isGrounded == false)
         {
             LeftGround = true;
         }
+    }
+    private void MidAirStrafe()
+    {
+        Vector3 Direction = GetCurrentDirection();
+        if (CurrentSpeed < MaxSpeed)
+        {
+            CurrentSpeed *= SprintAcceleration;
+        }
+        else
+        {
+            CurrentSpeed /= SprintAcceleration;
+        }
+        core.MovePlayer(Direction, CurrentSpeed);
+    }
+    private Vector3 GetCurrentDirection()
+    {
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
+
+        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+
+        var CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+
+        return CurrentDirection;
     }
 
     public override float GetUpdateToGravity()
@@ -123,7 +159,7 @@ public class Player_Jumping : Player_State
         bool JumpReachedApex = core.GetVelocity().y < CurrentJumpHeight / 2;
         bool JumpReachedShortApex = core.GetVelocity().y < CurrentJumpHeight * 0.75f;
 
-        if (JumpReachedApex == false && core.isPressingSpace == false)
+        if (JumpReachedApex == false && core.isPressingSpace == false && MaxJump == false)
         {
             ReleasedJumpEarly = true;
         }
@@ -151,6 +187,7 @@ public class Player_Jumping : Player_State
 
         // Save Jump Time to keep track of the jump cooldown
         data.StoreFloat("TimeSinceLastJump", Time.time);
+        data.StoreFloat("CurrentSpeed", CurrentSpeed);
 
         core.DisableGroundCheck = false;
     }

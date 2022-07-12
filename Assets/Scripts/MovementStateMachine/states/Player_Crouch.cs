@@ -85,7 +85,7 @@ public class Player_Crouch : Player_State
             core.SwapState(new Player_CrouchJump(core));
         }
 
-        if (core.isPressingSpace && notCrouchedTooLong)
+        if (core.isPressingSpace && core.isPressingWSAD && notCrouchedTooLong)
         {
             core.SwapState(new Player_Long_Jump(core));
         }

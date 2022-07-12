@@ -7,13 +7,15 @@ public class Player_Rolling : Player_State
     PlayerStateMachineCore core;
 
     // Movement
-    private float CurrentSpeed = 15f;
+    private float CurrentSpeed = 25f;
     private float MaxSpeed = 33f;
     private float SprintAcceleration = 1.0025f;
+    private float SlowDownStart = 0.0125f;
 
     // Refrences
     float turnSmoothVelocity;
     Vector3 CurrentDirection;
+    Vector3 TargetDirection;
 
     public Player_Rolling(PlayerStateMachineCore core)
     {
@@ -25,6 +27,7 @@ public class Player_Rolling : Player_State
         core.ChangeAnimationState("Roll", true);
 
         CurrentDirection = core.stateMemory.GetVector3("LongJumpDirection", Vector3.zero);
+        TargetDirection = CurrentDirection;
     }
 
     public override void UpdateMethod()
@@ -34,7 +37,7 @@ public class Player_Rolling : Player_State
         UpdateRotation();
 
         // Slope Adjustment
-        Vector3 AlignedDirection = AlignVectorToSlope(CurrentDirection, core.transform.position);
+        Vector3 AlignedDirection = CurrentDirection;//AlignVectorToSlope(CurrentDirection, core.transform.position);
 
         bool OnSlope = AlignedDirection.y < -0.05f || AlignedDirection.y > 0.05f;
 
@@ -56,7 +59,10 @@ public class Player_Rolling : Player_State
 
     private void UpdateDirectionAndSpeed(Vector3 CurrentVelocity)
     {
-        var Velocity = CurrentVelocity.y;
+        // Slowly Redirect to new Direction
+        CurrentDirection = Vector3.Lerp(CurrentDirection, TargetDirection, 0.01f);
+ 
+        var Velocity = AlignVectorToSlope(CurrentDirection, core.transform.position).y;
         bool GoingDownHill = Velocity < -0.05f;
         bool GoingUpHill = Velocity > 0.05f;
 
@@ -73,22 +79,19 @@ public class Player_Rolling : Player_State
             }
         }
 
-        if (GoingUpHill)
-        {
-            CurrentSpeed = Mathf.Clamp(CurrentSpeed - 0.1125f, 0, 100);
-
-            if (CurrentSpeed == 0)
-            {
-                CurrentDirection = FindDirectionDownHill(core.transform.position);
-                CurrentSpeed = 5f;
-            }
-        }
-
         bool NotOnSlope = !GoingDownHill && !GoingUpHill;
 
-        if (NotOnSlope)
+        if (GoingUpHill || NotOnSlope)
         {
-            CurrentSpeed = Mathf.Clamp(CurrentSpeed - 0.0025f, 0, 100);
+            CurrentSpeed = Mathf.Clamp(CurrentSpeed - SlowDownStart, 0, 100);
+
+            if (CurrentSpeed < 5)
+            {
+                SlowDownStart = 0.2125f;
+                TargetDirection = FindDirectionDownHill(core.transform.position);
+                
+                CurrentSpeed = 5f;
+            }
         }
     }
 
