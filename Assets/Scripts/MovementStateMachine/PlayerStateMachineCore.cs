@@ -6,14 +6,15 @@ public class PlayerStateMachineCore : MonoBehaviour
 {
     // Player Context
 
-    public bool DisableGroundCheck;
-    public bool isPressingCrouch;
-    public bool isPressingSpace;
-    public bool isPressingWSAD;
-    public bool isGrounded;
+    [HideInInspector] public bool DisableGroundCheck;
+    [HideInInspector] public bool isPressingCrouch;
+    [HideInInspector] public bool isPressingSpace;
+    [HideInInspector] public bool isPressingWSAD;
+    [HideInInspector] public bool isGrounded;
+    [HideInInspector] public bool isIdle;
 
-    public Vector2 movementInput;
-    public Vector3 CameraRotation;
+    [HideInInspector] public Vector2 movementInput;
+    [HideInInspector] public Vector3 CameraRotation;
 
     // Component Refrences 
 
@@ -25,10 +26,10 @@ public class PlayerStateMachineCore : MonoBehaviour
     [SerializeField] private LayerMask GroundMask;
 
     // Movement Stats
-
+    
     private Vector3 Velocity;
     private float RateOfGravity = -50f;
-    private float GroundCheckDistance = 0.4f;
+    private float GroundCheckDistance = 0.6f;
     private bool UsingGravity = true;
 
     // State Info
@@ -36,6 +37,9 @@ public class PlayerStateMachineCore : MonoBehaviour
     public Player_Timers stateMemory;
     private Player_State currentState;
     private bool SwappedThisFrame;
+
+    //[DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
+    public float speedDebug;
 
     private void Awake()
     {
@@ -74,9 +78,10 @@ public class PlayerStateMachineCore : MonoBehaviour
         UpdatePlayerContext();
 
         // If no inputs, default state is idle
-        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD)
+        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD && isIdle == false)
         {
             SwapState(new Player_Idle(this));
+            isIdle = true;
         }
 
         currentState.CheckForStateSwap();
@@ -134,12 +139,19 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         if (SwappedThisFrame == false)
         {
+            Animator.speed = 1;
             currentState.ExitMethod();
             currentState = input;
             currentState.StartMethod();
             SwappedThisFrame = true;
         }
     }
+
+    public void ChangeAnimationSpeed(float speed)
+    {
+        Animator.speed = speed;
+    }
+
     public void ChangeAnimationState(string animation, bool newState)
     {
         Animator.SetBool(animation, newState);

@@ -11,6 +11,8 @@ public class Player_Long_Jump : Player_State
     private float JumpVelocity = 15f;
     private float FallMultiplier = 2.0f;
 
+    private float turnSmoothVelocity;
+
     public Player_Long_Jump(PlayerStateMachineCore core)
     {
         this.core = core;
@@ -45,7 +47,11 @@ public class Player_Long_Jump : Player_State
     // When Long Jumping, you shoot forward
     private void MoveForwards()
     {
-        float TargetAngle = core.transform.eulerAngles.y;
+        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
+
+        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
         Vector3 AlignedDirection = AlignVectorToSlope(Direction, core.transform.position);

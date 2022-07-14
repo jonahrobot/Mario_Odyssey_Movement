@@ -16,6 +16,7 @@ public class Player_Rolling : Player_State
     float turnSmoothVelocity;
     Vector3 CurrentDirection;
     Vector3 TargetDirection;
+    bool stopRoll;
 
     public Player_Rolling(PlayerStateMachineCore core)
     {
@@ -79,9 +80,7 @@ public class Player_Rolling : Player_State
             }
         }
 
-        bool NotOnSlope = !GoingDownHill && !GoingUpHill;
-
-        if (GoingUpHill || NotOnSlope)
+        if (GoingUpHill)
         {
             CurrentSpeed = Mathf.Clamp(CurrentSpeed - SlowDownStart, 0, 100);
 
@@ -91,6 +90,18 @@ public class Player_Rolling : Player_State
                 TargetDirection = FindDirectionDownHill(core.transform.position);
                 
                 CurrentSpeed = 5f;
+            }
+        }
+
+        bool NotOnSlope = !GoingDownHill && !GoingUpHill;
+
+        if (NotOnSlope)
+        {
+            CurrentSpeed = Mathf.Clamp(CurrentSpeed - SlowDownStart, 0, 100);
+
+            if (CurrentSpeed < 5)
+            {
+                stopRoll = true;
             }
         }
     }
@@ -119,6 +130,16 @@ public class Player_Rolling : Player_State
 
     public override void CheckForStateSwap()
     {
+        if (stopRoll && core.isPressingWSAD)
+        {
+            core.SwapState(new Player_Running(core));
+            return;
+        }
+        if (stopRoll && !core.isPressingWSAD)
+        {
+            core.SwapState(new Player_Idle(core));
+            return;
+        }
     }
 
     public override float GetUpdateToGravity()

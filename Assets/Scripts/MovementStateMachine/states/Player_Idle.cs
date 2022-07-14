@@ -6,15 +6,32 @@ public class Player_Idle : Player_State
 {
     PlayerStateMachineCore core;
 
+    // Constants
+    private float startTime;
+    private bool AbleToJump;
+
     public Player_Idle(PlayerStateMachineCore core)
     {
         this.core = core;
     }
     public override void StartMethod()
     {
+        startTime = Time.time;
+        AbleToJump = core.stateMemory.GetBool("AbleToJump", false);
     }
+
     public override void UpdateMethod()
     {
+        if(core.isPressingSpace == false)
+        {
+            AbleToJump = true;
+        }
+
+        if(Time.time - startTime > 0.2f)
+        {
+            core.stateMemory.StoreFloat("CurrentSpeed", 0f);
+            //core.stateMemory.StoreVector3("CurrentDirection", Vector3.zero);
+        }
     }
     public override float GetUpdateToGravity()
     {
@@ -22,11 +39,14 @@ public class Player_Idle : Player_State
     }
     public override void ExitMethod()
     {
+        core.stateMemory.StoreBool("AbleToJump", AbleToJump);
+        core.isIdle = false;
     }
     public override void CheckForStateSwap()
     {
-        if (core.isPressingSpace)
+        if (core.isPressingSpace && AbleToJump == true)
         {
+            AbleToJump = false;
             core.SwapState(new Player_Jumping(core));
             return;
         }

@@ -5,16 +5,23 @@ using UnityEngine;
 public class Player_Running : Player_State
 {
     PlayerStateMachineCore core;
+    Player_Timers data;
 
     // Movement
-    private float CurrentSpeed;
-    private float MaxSpeed = 25f;
-    private float SprintAcceleration = 1.00125f;
+    private float CurrentSpeed = 0f;
+    private float MaxSpeed = 20f;
+
+    private float Velocity = 0;
+    private float SlowVelocity = 0;
+
+    private float Acceleration = 0.25f;
+    private float Deceleration = 0.25f / 4f;
 
     // Refrences
     private float turnSmoothVelocity;
     private float MaxSpeedOriginal;
-    private Player_Timers data;
+    private Vector3 Direction;
+    private bool AbleToJump;
 
     public Player_Running(PlayerStateMachineCore core)
     {
@@ -24,8 +31,16 @@ public class Player_Running : Player_State
 
     public override void StartMethod()
     {
+        AbleToJump = data.GetBool("AbleToJump", false);
+
         MaxSpeedOriginal = MaxSpeed;
-        CurrentSpeed = data.GetFloat("CurrentSpeed", 15f);
+        CurrentSpeed = data.GetFloat("CurrentSpeed", 0f);
+
+        if(CurrentSpeed < MaxSpeed)
+        {
+            core.ChangeAnimationSpeed(2);
+
+        }
         core.ChangeAnimationState("Run", true);
     }
 
@@ -34,21 +49,54 @@ public class Player_Running : Player_State
         Vector3 Direction = GetCurrentDirection();
         Vector3 AlignedDirection = AlignVectorToSlope(Direction, core.transform.position);
 
-        if (CurrentSpeed < MaxSpeed)
+        SlopeCheck(AlignedDirection);
+
+        if(core.isPressingSpace == false)
         {
-            CurrentSpeed *= SprintAcceleration;
-        }
-        else
-        {
-            CurrentSpeed /= SprintAcceleration;
+            AbleToJump = true;
         }
 
-        UpdateSpeedBasedOnVelocity(AlignedDirection);
+        if (CurrentSpeed < MaxSpeed)
+        {
+            Accelerate();
+        }
+        if (CurrentSpeed > MaxSpeed)
+        {
+            Decelerate();
+        }
+        if (CurrentSpeed == MaxSpeed)
+        {
+            Velocity = 0f;
+            SlowVelocity = 0f;
+        }
 
         core.MovePlayer(AlignedDirection, CurrentSpeed);
     }
+
+    private void Accelerate()
+    {
+        SlowVelocity = 0f;
+
+        Velocity += Acceleration * Time.deltaTime;
+        CurrentSpeed = Mathf.Min(CurrentSpeed + Velocity, MaxSpeed);
+
+        core.ChangeAnimationSpeed(2 - CurrentSpeed / MaxSpeed);
+        core.speedDebug = CurrentSpeed;
+    }
+    private void Decelerate()
+    {
+        Velocity = 0f;
+
+        SlowVelocity += Deceleration * Time.deltaTime;
+        CurrentSpeed = Mathf.Max(CurrentSpeed - SlowVelocity, MaxSpeed);
+
+        core.speedDebug = CurrentSpeed;
+    }
+
     private Vector3 GetCurrentDirection()
     {
+        Direction = new Vector3(core.movementInput.x, core.movementInput.y, 0);
+
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
@@ -58,7 +106,7 @@ public class Player_Running : Player_State
 
         return CurrentDirection;
     }
-    private void UpdateSpeedBasedOnVelocity(Vector3 CurrentVelocity)
+    private void SlopeCheck(Vector3 CurrentVelocity)
     {
         var Velocity = CurrentVelocity.y;
         bool GoingDownHill = Velocity < -0.2f;
@@ -66,8 +114,7 @@ public class Player_Running : Player_State
 
         if (GoingDownHill)
         {
-            SprintAcceleration = 1.00125f + 0.00125f;
-            MaxSpeed = MaxSpeedOriginal + 8f;
+            MaxSpeed = MaxSpeedOriginal + 12f;
         }
 
         if (GoingUpHill)
@@ -77,7 +124,6 @@ public class Player_Running : Player_State
 
         if (!GoingDownHill && !GoingUpHill)
         {
-            SprintAcceleration = 1.00125f;
             MaxSpeed = MaxSpeedOriginal;
         }
     }
@@ -88,7 +134,9 @@ public class Player_Running : Player_State
 
     public override void ExitMethod()
     {
+        data.StoreBool("AbleToJump", AbleToJump);
         data.StoreFloat("CurrentSpeed", CurrentSpeed);
+        //data.StoreVector3("CurrentDirection", Direction);
         core.ChangeAnimationState("Run", false);
     }
 
@@ -99,8 +147,9 @@ public class Player_Running : Player_State
             core.SwapState(new Player_Crouch(core));
             return;
         }
-        if (core.isPressingSpace)
+        if (core.isPressingSpace && AbleToJump == true)
         {
+            AbleToJump = false;
             core.SwapState(new Player_Jumping(core));
             return;
         }

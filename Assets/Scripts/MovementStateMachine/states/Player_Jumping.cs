@@ -45,7 +45,7 @@ public class Player_Jumping : Player_State
     {
         CurrentJumpState = data.GetFloat("CurrentJumpState", 0);
 
-        CurrentSpeed = data.GetFloat("CurrentSpeed", 15f);
+        CurrentSpeed = Mathf.Max(15f,data.GetFloat("CurrentSpeed", 15f));
 
         StoppedMovingDuringJump = data.GetBool("StoppedMovingDuringJump", false);
     }
@@ -124,6 +124,12 @@ public class Player_Jumping : Player_State
         {
             MidAirStrafe();
         }
+
+        if(core.isPressingSpace == false)
+        {
+            data.StoreBool("AbleToJump", true);
+        }
+
         if (core.isGrounded == false)
         {
             LeftGround = true;
@@ -131,20 +137,15 @@ public class Player_Jumping : Player_State
     }
     private void MidAirStrafe()
     {
-        Vector3 Direction = GetCurrentDirection();
-        if (CurrentSpeed < MaxSpeed)
-        {
-            CurrentSpeed *= SprintAcceleration;
-        }
-        else
-        {
-            CurrentSpeed /= SprintAcceleration;
-        }
+        core.speedDebug = CurrentSpeed;
+ 
+        var Direction = GetCurrentDirection(core.movementInput);
+        
         core.MovePlayer(Direction, CurrentSpeed);
     }
-    private Vector3 GetCurrentDirection()
+    private Vector3 GetCurrentDirection(Vector2 Input)
     {
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float TargetAngle = Mathf.Atan2(Input.x, Input.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
@@ -187,7 +188,7 @@ public class Player_Jumping : Player_State
 
         // Save Jump Time to keep track of the jump cooldown
         data.StoreFloat("TimeSinceLastJump", Time.time);
-        data.StoreFloat("CurrentSpeed", CurrentSpeed);
+        //data.StoreFloat("CurrentSpeed", CurrentSpeed);
 
         core.DisableGroundCheck = false;
     }

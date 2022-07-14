@@ -47,6 +47,8 @@ public class Player_GroundPound : Player_State
 
     public override void ExitMethod()
     {
+
+        Debug.Log("Left GroundPound");
         core.stateMemory.StoreFloat("GroundPoundExitTime", Time.time);
 
         core.ChangeAnimationState("GroundPound", false);
