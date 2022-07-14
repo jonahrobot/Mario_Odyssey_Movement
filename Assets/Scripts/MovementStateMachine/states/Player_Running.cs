@@ -14,8 +14,8 @@ public class Player_Running : Player_State
     private float Velocity = 0;
     private float SlowVelocity = 0;
 
-    private float Acceleration = 0.25f;
-    private float Deceleration = 0.25f / 4f;
+    private float Acceleration = 0.5f;
+    private float Deceleration = 0.5f / 4f;
 
     // Refrences
     private float turnSmoothVelocity;
@@ -34,9 +34,10 @@ public class Player_Running : Player_State
         AbleToJump = data.GetBool("AbleToJump", false);
 
         MaxSpeedOriginal = MaxSpeed;
-        CurrentSpeed = data.GetFloat("CurrentSpeed", 0f);
+        CurrentSpeed = Mathf.Min(data.GetFloat("CurrentSpeed", 0f),MaxSpeed);
+        core.speedDebug = CurrentSpeed;
 
-        if(CurrentSpeed < MaxSpeed)
+        if (CurrentSpeed < MaxSpeed)
         {
             core.ChangeAnimationSpeed(2);
 
@@ -95,7 +96,7 @@ public class Player_Running : Player_State
 
     private Vector3 GetCurrentDirection()
     {
-        Direction = new Vector3(core.movementInput.x, core.movementInput.y, 0);
+        
 
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
@@ -103,6 +104,7 @@ public class Player_Running : Player_State
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
 
         var CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
+        Direction = CurrentDirection;//new Vector3(core.movementInput.x, core.movementInput.y, 0);
 
         return CurrentDirection;
     }
@@ -136,7 +138,7 @@ public class Player_Running : Player_State
     {
         data.StoreBool("AbleToJump", AbleToJump);
         data.StoreFloat("CurrentSpeed", CurrentSpeed);
-        //data.StoreVector3("CurrentDirection", Direction);
+        data.StoreVector3("CurrentDirection", Direction);
         core.ChangeAnimationState("Run", false);
     }
 

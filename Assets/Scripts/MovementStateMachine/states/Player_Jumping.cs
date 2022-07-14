@@ -6,8 +6,8 @@ public class Player_Jumping : Player_State
 
     // Movement
     private float CurrentJumpHeight = 0;
-    private float GravityOnFall = 2.0f;
-    private float GravityOnShortFall = 3.0f;
+    private float GravityOnFall = 3.0f;
+    private float GravityOnShortFall = 4.0f;
 
     private float CurrentSpeed;
     private float MaxSpeed = 25f;
@@ -25,6 +25,7 @@ public class Player_Jumping : Player_State
     // Refrences
     private Player_Timers data;
     private float turnSmoothVelocity;
+    private Vector2 Direction = Vector2.zero;
 
     public Player_Jumping(PlayerStateMachineCore core)
     {
@@ -45,7 +46,7 @@ public class Player_Jumping : Player_State
     {
         CurrentJumpState = data.GetFloat("CurrentJumpState", 0);
 
-        CurrentSpeed = Mathf.Max(15f,data.GetFloat("CurrentSpeed", 15f));
+        CurrentSpeed = Mathf.Max(20f,data.GetFloat("CurrentSpeed", 20f) + 5f);
 
         StoppedMovingDuringJump = data.GetBool("StoppedMovingDuringJump", false);
     }
@@ -75,7 +76,7 @@ public class Player_Jumping : Player_State
         var lastJumpTime = data.GetFloat("TimeSinceLastJump", 0);
         var secondsBetweenJumps = Time.time - lastJumpTime;
 
-        if (secondsBetweenJumps > 0.3f)
+        if (secondsBetweenJumps > 0.15f)
         {
             CurrentJumpState = 0;
         }
@@ -94,16 +95,15 @@ public class Player_Jumping : Player_State
         switch (CurrentJumpState)
         {
             case 0:
-                CurrentJumpHeight = 25f;
+                CurrentJumpHeight = 35f;
                 core.ChangeAnimationState("Jump_1", true);
                 break;
             case 1:
-                CurrentJumpHeight = 26f;
+                CurrentJumpHeight = 37f;
                 core.ChangeAnimationState("Jump_2", true);
                 break;
             case 2:
-                CurrentJumpHeight = 35f;
-                MaxJump = true;
+                CurrentJumpHeight = 43f; 
                 break;
         }
 
@@ -116,13 +116,10 @@ public class Player_Jumping : Player_State
 
     public override void UpdateMethod()
     {
+        MidAirStrafe();
         if (core.isPressingWSAD == false)
         {
             data.StoreBool("StoppedMovingDuringJump", true);
-        }
-        else
-        {
-            MidAirStrafe();
         }
 
         if(core.isPressingSpace == false)
@@ -138,10 +135,18 @@ public class Player_Jumping : Player_State
     private void MidAirStrafe()
     {
         core.speedDebug = CurrentSpeed;
- 
-        var Direction = GetCurrentDirection(core.movementInput);
-        
-        core.MovePlayer(Direction, CurrentSpeed);
+        if (core.isPressingWSAD == true)
+        {
+            Direction = core.movementInput;
+            core.MovePlayer(GetCurrentDirection(core.movementInput), CurrentSpeed);
+        }
+        else
+        {
+            if (Direction != Vector2.zero)
+            {
+                core.MovePlayer(GetCurrentDirection(Direction), CurrentSpeed / 2);
+            }
+        }
     }
     private Vector3 GetCurrentDirection(Vector2 Input)
     {
