@@ -40,7 +40,7 @@ public class Player_GroundPound : Player_State
     {
         if (HasFallen)
         {
-            return 8f;
+            return 12f;
         }
         return 0f;
     }

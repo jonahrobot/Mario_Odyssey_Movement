@@ -7,8 +7,8 @@ public class Player_Long_Jump : Player_State
     PlayerStateMachineCore core;
 
     // Stats
-    private float HorizontalSpeed = 45f;
-    private float JumpVelocity = 15f;
+    private float HorizontalSpeed = 40f;
+    private float JumpVelocity = 25f;
     private float FallMultiplier = 2.0f;
 
     private float turnSmoothVelocity;

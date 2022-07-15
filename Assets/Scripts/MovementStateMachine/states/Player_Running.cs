@@ -23,6 +23,10 @@ public class Player_Running : Player_State
     private Vector3 Direction;
     private bool AbleToJump;
 
+    private bool JumpBufferOn;
+    private bool TriggeredJumpBuffer;
+    private float JumpBufferTimer;
+
     public Player_Running(PlayerStateMachineCore core)
     {
         this.core = core;
@@ -47,12 +51,14 @@ public class Player_Running : Player_State
 
     public override void UpdateMethod()
     {
+
         Vector3 Direction = GetCurrentDirection();
         Vector3 AlignedDirection = AlignVectorToSlope(Direction, core.transform.position);
 
         SlopeCheck(AlignedDirection);
+        CoyoteTime();
 
-        if(core.isPressingSpace == false)
+        if (core.isPressingSpace == false)
         {
             AbleToJump = true;
         }
@@ -71,7 +77,32 @@ public class Player_Running : Player_State
             SlowVelocity = 0f;
         }
 
-        core.MovePlayer(AlignedDirection, CurrentSpeed);
+        if (core.isPressingWSAD)
+        {
+            core.MovePlayer(AlignedDirection, CurrentSpeed);
+        }
+    }
+    private void CoyoteTime()
+    {
+        if (TriggeredJumpBuffer == false && core.isGrounded == false)
+        {
+            TriggeredJumpBuffer = true;
+            JumpBufferTimer = Time.time;
+            JumpBufferOn = true;
+        }
+
+        bool JumpBufferOver = Time.time - JumpBufferTimer > 0.2f;
+
+        if (TriggeredJumpBuffer == true && JumpBufferOver)
+        {
+            JumpBufferOn = false;
+        }
+
+        if (core.isGrounded)
+        {
+            TriggeredJumpBuffer = false;
+            JumpBufferOn = false;
+        }
     }
 
     private void Accelerate()
@@ -96,12 +127,13 @@ public class Player_Running : Player_State
 
     private Vector3 GetCurrentDirection()
     {
-        
-
         float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
-        core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        if (core.isPressingWSAD)
+        {
+            core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
+        }
 
         var CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
         Direction = CurrentDirection;//new Vector3(core.movementInput.x, core.movementInput.y, 0);
@@ -144,15 +176,21 @@ public class Player_Running : Player_State
 
     public override void CheckForStateSwap()
     {
-        if (core.isPressingCrouch)
+        if (core.isPressingCrouch && core.isGrounded)
         {
             core.SwapState(new Player_Crouch(core));
             return;
         }
-        if (core.isPressingSpace && AbleToJump == true)
+        if (core.isPressingSpace && AbleToJump == true && (core.isGrounded || JumpBufferOn))
         {
             AbleToJump = false;
             core.SwapState(new Player_Jumping(core));
+            return;
+        }
+
+        if (core.isPressingCrouch && core.isGrounded == false)
+        {
+            core.SwapState(new Player_GroundPound(core));
             return;
         }
     }
