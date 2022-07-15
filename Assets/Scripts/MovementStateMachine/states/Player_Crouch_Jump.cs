@@ -7,8 +7,8 @@ public class Player_CrouchJump : Player_State
     PlayerStateMachineCore core;
 
     // Movement
-    private float JumpVelocity = 32f;
-    private float FallMultiplier = 2.0f;
+    private float JumpVelocity = 43f;
+    private float FallMultiplier = 4.0f;
     private float Speed = 5f;
 
     // Refrences
@@ -67,6 +67,7 @@ public class Player_CrouchJump : Player_State
     public override void ExitMethod()
     {
         core.ChangeAnimationState("LongJump", false);
+        core.stateMemory.StoreFloat("CurrentSpeed", 0f);
     }
 
     public override void CheckForStateSwap()

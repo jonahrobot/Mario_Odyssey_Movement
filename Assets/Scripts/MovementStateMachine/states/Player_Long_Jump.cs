@@ -81,7 +81,14 @@ public class Player_Long_Jump : Player_State
         {
             if (core.isPressingCrouch)
             {
-                core.SwapState(new Player_Rolling(core));
+                if (core.isPressingSpace)
+                {
+                    core.SwapState(new Player_Long_Jump(core));
+                }
+                else
+                {
+                    core.SwapState(new Player_Rolling(core));
+                }
             }
             else
             {

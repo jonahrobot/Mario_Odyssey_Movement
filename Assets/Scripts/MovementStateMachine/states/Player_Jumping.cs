@@ -16,6 +16,8 @@ public class Player_Jumping : Player_State
     // States of Jump
     private bool ReleasedJumpEarly = false;
     private bool MaxJump = false;
+    private bool LongJumpDelay = true;
+    private float TimeSinceJump = Time.time;
 
     // Constants
     private float CurrentJumpState;
@@ -116,6 +118,15 @@ public class Player_Jumping : Player_State
 
     public override void UpdateMethod()
     {
+        // Makes sure user wont trigger grounpound accidentally instead of a long jump
+        if(LongJumpDelay == true)
+        {
+            if(Time.time - TimeSinceJump > 0.1f)
+            {
+                LongJumpDelay = false;
+            }
+        }
+
         MidAirStrafe();
         if (core.isPressingWSAD == false)
         {
@@ -202,9 +213,14 @@ public class Player_Jumping : Player_State
 
     public override void CheckForStateSwap()
     {
-        if (core.isPressingCrouch)
+        if (core.isPressingCrouch && LongJumpDelay == false)
         {
             core.SwapState(new Player_GroundPound(core));
+            return;
+        }
+        if (core.isPressingCrouch && LongJumpDelay)
+        {
+            core.SwapState(new Player_Long_Jump(core));
             return;
         }
         if (core.isGrounded && LeftGround)

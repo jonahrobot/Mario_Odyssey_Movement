@@ -7,10 +7,10 @@ public class Player_Rolling : Player_State
     PlayerStateMachineCore core;
 
     // Movement
-    private float CurrentSpeed = 25f;
-    private float MaxSpeed = 33f;
+    private float CurrentSpeed = 40f;
+    private float MaxSpeed = 50f;
     private float SprintAcceleration = 1.0025f;
-    private float SlowDownStart = 0.0125f;
+    private float SlowDownStart = 0.0225f;
 
     // Refrences
     float turnSmoothVelocity;
@@ -130,14 +130,19 @@ public class Player_Rolling : Player_State
 
     public override void CheckForStateSwap()
     {
-        if (stopRoll && core.isPressingWSAD)
+        if ((stopRoll || core.isPressingCrouch == false) && core.isPressingWSAD)
         {
             core.SwapState(new Player_Running(core));
             return;
         }
-        if (stopRoll && !core.isPressingWSAD)
+        if ((stopRoll || core.isPressingCrouch == false) && !core.isPressingWSAD)
         {
             core.SwapState(new Player_Idle(core));
+            return;
+        }
+        if (core.isPressingSpace)
+        {
+            core.SwapState(new Player_Long_Jump(core));
             return;
         }
     }
