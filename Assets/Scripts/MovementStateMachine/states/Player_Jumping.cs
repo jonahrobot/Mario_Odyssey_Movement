@@ -10,8 +10,6 @@ public class Player_Jumping : Player_State
     private float GravityOnShortFall = 4.0f;
 
     private float CurrentSpeed;
-    private float MaxSpeed = 25f;
-    private float SprintAcceleration = 1.00125f;
 
     // States of Jump
     private bool ReleasedJumpEarly = false;
@@ -128,6 +126,7 @@ public class Player_Jumping : Player_State
         }
 
         MidAirStrafe();
+
         if (core.isPressingWSAD == false)
         {
             data.StoreBool("StoppedMovingDuringJump", true);
