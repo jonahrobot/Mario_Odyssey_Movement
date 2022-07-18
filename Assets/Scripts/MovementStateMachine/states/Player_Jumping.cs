@@ -227,6 +227,11 @@ public class Player_Jumping : Player_State
             core.SwapState(new Player_Idle(core));
             return;
         }
+        if (core.hasClicked && core.getHasHat())
+        {
+            core.SwapState(new Player_Hat_Throw(core));
+            return;
+        }
     }
 
 }

@@ -1,11 +1,17 @@
 fileFormatVersion: 2
-guid: 8ea771beade62af418c395390d6f5ae8
+guid: 92d9872f43944144a88bfa179fcdc9cc
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable:
   - first:
       74: -3100369314251171874
     second: Idle
+  - first:
+      74: -7813635296899823279
+    second: Crouch
+  - first:
+      74: -2341027594253812581
+    second: Roll
   - first:
       74: 453350418248776828
     second: metarigAction.002
@@ -19,9 +25,6 @@ ModelImporter:
       74: -9004588403959649595
     second: LongJump
   - first:
-      74: -2341027594253812581
-    second: Roll
-  - first:
       74: -8967437178350921373
     second: Roll.001
   - first:
@@ -30,9 +33,6 @@ ModelImporter:
   - first:
       74: 4705520844904137374
     second: LongJump.001
-  - first:
-      74: -7813635296899823279
-    second: Crouch
   - first:
       74: -7180294270926287462
     second: CrouchWalk
@@ -55,41 +55,56 @@ ModelImporter:
       74: -1803562978205897984
     second: Roll.002
   - first:
+      74: -6671440918249806661
+    second: ThrowHat
+  - first:
+      74: -4065921413070429900
+    second: Hat Catch
+  - first:
+      74: 1038902726505148210
+    second: Hat Throw Midair
+  - first:
       74: 6533196968295754381
-    second: Crouch_EX
+    second: Hat Throw Midair
   - first:
       74: 8144370860992494471
-    second: CrouchWalk_EX
+    second: metarig|CrouchWalk
   - first:
       74: -7608480804069109244
-    second: GroundPound_EX
+    second: metarig|GroundPound
+  - first:
+      74: 7882935927927775092
+    second: metarig|Hat Catch
+  - first:
+      74: 2521372610693488110
+    second: metarig|Hat Throw Midair
   - first:
       74: -5324238279805231817
-    second: Idle_EX
+    second: metarig|Idle
   - first:
       74: -7171563100462596450
-    second: Jump_1_Mirror_EX
+    second: Jump1_Mirror
   - first:
       74: 3910594196127831985
-    second: Jump_1_EX
+    second: metarig|Jump_1
   - first:
       74: 725040674181594472
     second: metarig|Jump_1.001
   - first:
       74: -3308169593358665463
-    second: Jump_2_EX
+    second: metarig|Jump_2
   - first:
       74: -6739816997157809671
-    second: LongJump_EX
+    second: metarig|LongJump
   - first:
       74: -8577492432117613333
-    second: Roll_EX
+    second: metarig|Roll
   - first:
       74: -2336705109735870664
-    second: Run
+    second: metarig|runAnimation
   - first:
-      74: 8214608610040690321
-    second: Jump_1_Mirror
+      74: -8054088829980593864
+    second: metarig|ThrowHat
   externalObjects: {}
   materials:
     materialImportMode: 2
@@ -206,6 +221,64 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
+      name: Hat Catch
+      takeName: metarig|Hat Catch
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 22
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Hat Throw Midair
+      takeName: metarig|Hat Throw Midair
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 29
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
       name: Idle
       takeName: metarig|Idle
       internalID: 0
@@ -235,7 +308,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Jump_1_Mirror
+      name: Jump1_Mirror
       takeName: metarig|Jump1_Mirror
       internalID: 0
       firstFrame: 0
@@ -380,7 +453,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Run
+      name: runAnimation
       takeName: metarig|runAnimation
       internalID: 0
       firstFrame: 0
@@ -392,6 +465,35 @@ ModelImporter:
       loop: 0
       hasAdditiveReferencePose: 0
       loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: ThrowHat
+      takeName: metarig|ThrowHat
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 22
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
       loopBlend: 0
       loopBlendOrientation: 0
       loopBlendPositionY: 0

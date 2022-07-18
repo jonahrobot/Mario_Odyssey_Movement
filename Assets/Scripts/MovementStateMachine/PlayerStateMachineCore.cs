@@ -12,6 +12,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     [HideInInspector] public bool isPressingWSAD;
     [HideInInspector] public bool isGrounded;
     [HideInInspector] public bool isIdle;
+    public bool hasClicked;
 
     [HideInInspector] public Vector2 movementInput;
     [HideInInspector] public Vector3 CameraRotation;
@@ -22,6 +23,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     private Transform Camera;
     private Transform GroundCheck;
     private InputMaster InputController;
+    private MouseTest ClickController;
     private CharacterController Character;
     [SerializeField] private LayerMask GroundMask;
 
@@ -37,6 +39,9 @@ public class PlayerStateMachineCore : MonoBehaviour
     public Player_Timers stateMemory;
     private Player_State currentState;
     private bool SwappedThisFrame;
+    private bool hasHat = true;
+    private bool preventIdleSwap = false;
+
 
     //[DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
     public float speedDebug;
@@ -63,6 +68,9 @@ public class PlayerStateMachineCore : MonoBehaviour
         InputController = new InputMaster();
         InputController.Enable();
 
+        ClickController = new MouseTest();
+        ClickController.Enable();
+
         // Initial Setup
         Velocity = new Vector3(0f, -2f, 0f);
 
@@ -77,14 +85,14 @@ public class PlayerStateMachineCore : MonoBehaviour
 
         UpdatePlayerContext();
 
+        currentState.CheckForStateSwap();
+
         // If no inputs, default state is idle
-        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD && isIdle == false)
+        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD && isIdle == false && preventIdleSwap == false)
         {
             SwapState(new Player_Idle(this));
             isIdle = true;
         }
-
-        currentState.CheckForStateSwap();
         currentState.UpdateMethod();
 
         UpdateMovePlayer();
@@ -108,6 +116,7 @@ public class PlayerStateMachineCore : MonoBehaviour
             if (GravityUpdate != 0) { DeltaV *= GravityUpdate; }
 
             Velocity.y += DeltaV;
+            
         }
 
         if (UsingGravity)
@@ -129,6 +138,8 @@ public class PlayerStateMachineCore : MonoBehaviour
         isPressingCrouch = InputController.Player.Crouch.ReadValue<float>() == 1f;
         isPressingSpace = InputController.Player.Jump.ReadValue<float>() == 1f;
         isPressingWSAD = movementInput.magnitude >= 0.2f;
+
+        hasClicked = ClickController.Mouse.MouseClick.ReadValue<float>() == 1f;
 
         CameraRotation = Camera.eulerAngles;
     }
@@ -157,6 +168,14 @@ public class PlayerStateMachineCore : MonoBehaviour
         Animator.SetBool(animation, newState);
     }
 
+    public bool CheckIfAnimationsOver(string name)
+    {
+        if (Animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == name){
+            return Animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1 && !Animator.IsInTransition(0);
+        }
+        return false;
+    }
+
     public void MovePlayer(Vector3 direction, float speed)
     {
         Character.Move(direction.normalized * speed * Time.deltaTime);
@@ -177,4 +196,23 @@ public class PlayerStateMachineCore : MonoBehaviour
         Velocity = new Vector3(Velocity.x, newYVelocity, Velocity.z);
     }
    
+    public bool getHasHat()
+    {
+        return hasHat;
+    }
+
+    public void setHasHat(bool value)
+    {
+        hasHat = value;
+    }
+
+    public bool getPreventIdleSwap()
+    {
+        return preventIdleSwap;
+    }
+
+    public void setPreventIdleSwap(bool value)
+    {
+        preventIdleSwap = value;
+    }
 }
