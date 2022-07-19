@@ -130,6 +130,11 @@ public class Player_Rolling : Player_State
 
     public override void CheckForStateSwap()
     {
+        if (core.onHat)
+        {
+            core.SwapState(new Player_Jumping(core));
+            return;
+        }
         if ((stopRoll || core.isPressingCrouch == false) && core.isPressingWSAD)
         {
             core.SwapState(new Player_Running(core));

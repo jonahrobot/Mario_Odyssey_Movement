@@ -57,6 +57,12 @@ public class Player_GroundPound : Player_State
 
     public override void CheckForStateSwap()
     {
+        if (core.onHat)
+        {
+            core.SwapState(new Player_Jumping(core));
+            return;
+        }
+
         if (core.isGrounded)
         {
             core.SwapState(new Player_Idle(core));

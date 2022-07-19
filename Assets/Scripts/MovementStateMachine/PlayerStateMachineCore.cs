@@ -12,7 +12,8 @@ public class PlayerStateMachineCore : MonoBehaviour
     [HideInInspector] public bool isPressingWSAD;
     [HideInInspector] public bool isGrounded;
     [HideInInspector] public bool isIdle;
-    public bool hasClicked;
+    [HideInInspector] public bool hasClicked;
+    [HideInInspector] public bool onHat;
 
     [HideInInspector] public Vector2 movementInput;
     [HideInInspector] public Vector3 CameraRotation;
@@ -25,10 +26,11 @@ public class PlayerStateMachineCore : MonoBehaviour
     private InputMaster InputController;
     private MouseTest ClickController;
     private CharacterController Character;
+    private MarioHatCore marioHat;
     [SerializeField] private LayerMask GroundMask;
 
     // Movement Stats
-    
+
     private Vector3 Velocity;
     private float RateOfGravity = -50f;
     private float GroundCheckDistance = 0.6f;
@@ -49,7 +51,8 @@ public class PlayerStateMachineCore : MonoBehaviour
     private void Awake()
     {
         // Get Components
-       
+        marioHat = GameObject.Find("MarioHat").GetComponent<MarioHatCore>();
+
         GroundCheck = GameObject.Find("GroundCheck").transform;
 
         Character = GetComponent<CharacterController>();
@@ -57,7 +60,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         Animator = GetComponentInChildren<Animator>();
 
         Camera = GameObject.Find("Camera").transform;
-       
+
         // Create Instances
 
         stateMemory = new Player_Timers();
@@ -116,21 +119,20 @@ public class PlayerStateMachineCore : MonoBehaviour
             if (GravityUpdate != 0) { DeltaV *= GravityUpdate; }
 
             Velocity.y += DeltaV;
-            
         }
 
         if (UsingGravity)
-        { 
-            Character.Move(Velocity * Time.deltaTime); 
+        {
+            Character.Move(Velocity * Time.deltaTime);
         }
     }
-    
+
     private void UpdatePlayerContext()
     {
         movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
 
         isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
-        if(DisableGroundCheck == true)
+        if (DisableGroundCheck == true)
         {
             isGrounded = false;
         }
@@ -168,10 +170,11 @@ public class PlayerStateMachineCore : MonoBehaviour
         Animator.SetBool(animation, newState);
     }
 
-    public bool CheckIfAnimationsOver(string name)
+    public bool CheckAnimationProgress(string name, float time)
     {
-        if (Animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == name){
-            return Animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1 && !Animator.IsInTransition(0);
+        if (Animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == name)
+        {
+            return Animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= time && !Animator.IsInTransition(0);
         }
         return false;
     }
@@ -190,12 +193,12 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         return Velocity;
     }
-    
+
     public void SetVerticalVelocity(float newYVelocity)
     {
         Velocity = new Vector3(Velocity.x, newYVelocity, Velocity.z);
     }
-   
+
     public bool getHasHat()
     {
         return hasHat;
@@ -214,5 +217,26 @@ public class PlayerStateMachineCore : MonoBehaviour
     public void setPreventIdleSwap(bool value)
     {
         preventIdleSwap = value;
+    }
+
+    public MarioHatCore getMarioHatCore()
+    {
+        return marioHat;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Hat" && hasHat == false)
+        {
+            onHat = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Hat")
+        {
+            onHat = false;
+        }
     }
 }

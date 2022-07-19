@@ -232,6 +232,11 @@ public class Player_Jumping : Player_State
             core.SwapState(new Player_Hat_Throw(core));
             return;
         }
+        if (core.onHat)
+        {
+            core.SwapState(new Player_Jumping(core));
+            return;
+        }
     }
 
 }

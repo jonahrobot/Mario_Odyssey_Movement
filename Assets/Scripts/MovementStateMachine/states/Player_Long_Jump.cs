@@ -7,9 +7,9 @@ public class Player_Long_Jump : Player_State
     PlayerStateMachineCore core;
 
     // Stats
-    private float HorizontalSpeed = 40f;
-    private float JumpVelocity = 25f;
-    private float FallMultiplier = 2.0f;
+    private float HorizontalSpeed = 30f;
+    private float JumpVelocity = 15f;
+    private float FallMultiplier = 3.0f;
 
     private float turnSmoothVelocity;
 
@@ -77,7 +77,7 @@ public class Player_Long_Jump : Player_State
 
     public override void CheckForStateSwap()
     {
-        if (core.isGrounded)
+        if (core.isGrounded && !core.onHat)
         {
             if (core.isPressingCrouch)
             {
@@ -94,6 +94,12 @@ public class Player_Long_Jump : Player_State
             {
                 core.SwapState(new Player_Idle(core));
             }
+        }
+
+        if (core.onHat)
+        {
+            core.SwapState(new Player_Jumping(core));
+            return;
         }
     }
 }

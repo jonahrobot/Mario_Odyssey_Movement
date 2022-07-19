@@ -136,7 +136,7 @@ public class Player_Running : Player_State
         }
 
         var CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
-        Direction = CurrentDirection;//new Vector3(core.movementInput.x, core.movementInput.y, 0);
+        Direction = CurrentDirection;
 
         return CurrentDirection;
     }
@@ -191,6 +191,17 @@ public class Player_Running : Player_State
         if (core.isPressingCrouch && core.isGrounded == false)
         {
             core.SwapState(new Player_GroundPound(core));
+            return;
+        }
+
+        if (core.onHat)
+        {
+            core.SwapState(new Player_Jumping(core));
+            return;
+        }
+        if (core.hasClicked && core.getHasHat())
+        {
+            core.SwapState(new Player_Hat_Throw(core));
             return;
         }
     }
