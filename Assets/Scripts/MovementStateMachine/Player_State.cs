@@ -24,4 +24,9 @@ public abstract class Player_State
 
         return AngleOfCorrection * VectorToAlign;
     }
+
+    public float TargetAngleCameraRelative(PlayerStateMachineCore core)
+    {
+        return Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+    }
 }

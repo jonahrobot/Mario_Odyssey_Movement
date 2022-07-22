@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Stores varaibles over multiple states
-// Runs Coroutines for states, even after they exit
+// Black board Object! 
 public class Player_Timers : MonoBehaviour
 {
 

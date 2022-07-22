@@ -2,26 +2,32 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//[RequireComponent] should add!
 public class PlayerStateMachineCore : MonoBehaviour
 {
     // Player Context
 
     [HideInInspector] public bool DisableGroundCheck;
+
+    // Could be put in each state, don't want to be finding crouch when not actually needed.
     [HideInInspector] public bool isPressingCrouch;
     [HideInInspector] public bool isPressingSpace;
     [HideInInspector] public bool isPressingWSAD;
-    [HideInInspector] public bool isGrounded;
+   
     [HideInInspector] public bool isIdle;
     [HideInInspector] public bool hasClicked;
     [HideInInspector] public bool onHat;
+
+    // Harder to find 
+    [HideInInspector] public bool isGrounded;
 
     [HideInInspector] public Vector2 movementInput;
     [HideInInspector] public Vector3 CameraRotation;
 
     // Component Refrences 
 
-    private Animator Animator;
-    private Transform Camera;
+    private Animator Animator; // Could seperate animation stuff into its own system
+    private Transform Camera; // Only used once!
     private Transform GroundCheck;
     private InputMaster InputController;
     private MouseTest ClickController;
@@ -45,7 +51,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     private bool preventIdleSwap = false;
 
 
-    //[DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
+    [DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
     public float speedDebug;
 
     private void Awake()
