@@ -4,11 +4,25 @@ using UnityEngine;
 
 public abstract class Player_State
 {
+    protected PlayerStateMachineCore core;
+    protected State_Animation_Controller AnimationController;
+    protected Player_Timers data;
+    protected State_Context_Handler StateContext;
+    protected Player_State(PlayerStateMachineCore core)
+    {
+        this.core = core;
+        data = core.StateMemory;
+        AnimationController = core.AnimationController;
+        StateContext = core.StateContext;
+    }
+
     public abstract void  StartMethod();
     public abstract void  UpdateMethod();
-    public abstract float GetUpdateToGravity();
+    public virtual float GetUpdateToGravity() {
+        return 0;
+    }
     public abstract void  ExitMethod();
-    public abstract void  CheckForStateSwap();
+    public abstract void  CheckStateSwaps();
 
     public Vector3 AlignVectorToSlope(Vector3 VectorToAlign, Vector3 currentPosition)
     {
@@ -27,6 +41,6 @@ public abstract class Player_State
 
     public float TargetAngleCameraRelative(PlayerStateMachineCore core)
     {
-        return Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        return Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
     }
 }

@@ -9,7 +9,7 @@ public class CameraTargetScript : MonoBehaviour
 
 
     Transform PlayerMesh;
-    PlayerStateMachineCore core;
+    State_Context_Handler StateContext;
     Camera mainCamera;
 
     float yPosition;
@@ -19,13 +19,13 @@ public class CameraTargetScript : MonoBehaviour
     private void Start()
     {
         mainCamera = GameObject.Find("Camera").GetComponent<Camera>();
-        core = GameObject.Find("Player").GetComponent<PlayerStateMachineCore>();
+        StateContext = GameObject.Find("Player").GetComponent<PlayerStateMachineCore>().StateContext;
         PlayerMesh = GameObject.Find("CameraTargetLink").transform;
     }
 
     private void Update()
     {
-        if (core.isGrounded == false && DidLeaveGroundAction == false)
+        if (StateContext.IsGrounded == false && DidLeaveGroundAction == false)
         {
             DidLeaveGroundAction = true;
             yPosition = PlayerMesh.position.y;
@@ -40,7 +40,7 @@ public class CameraTargetScript : MonoBehaviour
         if (characterViewPosition.y > 0.95f || characterViewPosition.y < 0.3f)
         {
             yPosition = PlayerMesh.position.y;
-        }else if (core.isGrounded)
+        }else if (StateContext.IsGrounded)
         {
             DidLeaveGroundAction = false;
             yPosition = PlayerMesh.position.y;

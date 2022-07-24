@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Player_CrouchJump : Player_State
 {
-    PlayerStateMachineCore core;
 
     // Movement
     private float JumpVelocity = 43f;
@@ -14,28 +13,27 @@ public class Player_CrouchJump : Player_State
     // Refrences
     private bool ReleasedCrouch;
 
-    public Player_CrouchJump(PlayerStateMachineCore core)
+    public Player_CrouchJump(PlayerStateMachineCore core):base(core)
     {
-        this.core = core;
     }
 
     public override void StartMethod()
     {
         core.DisableGroundCheck = true;
 
-        core.ChangeAnimationState("LongJump", true);
+        AnimationController.ChangeAnimationState("LongJump", true);
         core.SetVerticalVelocity(JumpVelocity);
     }
 
     public override void UpdateMethod()
     {
         // If no overiding movement, continue backflip
-        if (core.isPressingWSAD == false)
+        if (StateContext.IsMoving == false)
         {
             MoveBackwards();
         }
 
-        if (!core.isPressingCrouch)
+        if (!StateContext.IsCrouched)
         {
             ReleasedCrouch = true;
         }
@@ -66,18 +64,18 @@ public class Player_CrouchJump : Player_State
     }
     public override void ExitMethod()
     {
-        core.ChangeAnimationState("LongJump", false);
-        core.stateMemory.StoreFloat("CurrentSpeed", 0f);
+        AnimationController.ChangeAnimationState("LongJump", false);
+        core.StateMemory.StoreFloat("CurrentSpeed", 0f);
     }
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.isPressingCrouch && ReleasedCrouch)
+        if (StateContext.IsCrouched && ReleasedCrouch)
         {
             core.SwapState(new Player_GroundPound(core));
             return;
         }
-        if (core.isGrounded)
+        if (StateContext.IsGrounded)
         {
             core.SwapState(new Player_Idle(core));
             return;

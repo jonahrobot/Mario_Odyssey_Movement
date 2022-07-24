@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MarioHatCore : MonoBehaviour
 {
-    PlayerStateMachineCore core;
+    State_Context_Handler StateContext;
     GameObject parent;
     GameObject arm;
     BoxCollider collider;
@@ -26,7 +26,7 @@ public class MarioHatCore : MonoBehaviour
     {
         collider = GetComponent<BoxCollider>();
         parent = GameObject.Find("MarioHatLink");
-        core = GameObject.Find("Player").GetComponent<PlayerStateMachineCore>();
+        StateContext = GameObject.Find("Player").GetComponent<PlayerStateMachineCore>().StateContext;
         arm = GameObject.Find("MarioHatLinkArm");
     }
 
@@ -104,7 +104,7 @@ public class MarioHatCore : MonoBehaviour
             if (reachedTarget && currentState == throwState.RETURN)
             {
                 currentState = throwState.IDLE;
-                core.setHasHat(true);
+                StateContext.HasHat = true;
             }
         }
     }

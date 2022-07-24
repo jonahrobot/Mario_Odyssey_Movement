@@ -9,232 +9,162 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     [HideInInspector] public bool DisableGroundCheck;
 
-    // Could be put in each state, don't want to be finding crouch when not actually needed.
-    [HideInInspector] public bool isPressingCrouch;
-    [HideInInspector] public bool isPressingSpace;
-    [HideInInspector] public bool isPressingWSAD;
-   
-    [HideInInspector] public bool isIdle;
-    [HideInInspector] public bool hasClicked;
-    [HideInInspector] public bool onHat;
+    [HideInInspector] public bool IsIdle;
+    [HideInInspector] public bool HasClicked;
+    [HideInInspector] public bool CollidingWithHat;
 
-    // Harder to find 
-    [HideInInspector] public bool isGrounded;
-
-    [HideInInspector] public Vector2 movementInput;
+    [HideInInspector] public Vector2 MovementInput;
     [HideInInspector] public Vector3 CameraRotation;
 
     // Component Refrences 
-
-    private Animator Animator; // Could seperate animation stuff into its own system
-    private Transform Camera; // Only used once!
-    private Transform GroundCheck;
-    private InputMaster InputController;
-    private MouseTest ClickController;
-    private CharacterController Character;
-    private MarioHatCore marioHat;
-    [SerializeField] private LayerMask GroundMask;
+    private CharacterController _character;
+    private MarioHatCore _marioHat;
+    [SerializeField] private LayerMask _groundMask;
 
     // Movement Stats
 
-    private Vector3 Velocity;
-    private float RateOfGravity = -50f;
-    private float GroundCheckDistance = 0.6f;
-    private bool UsingGravity = true;
+    private Vector3 _velocity;
+    private static float s_rateOfGravity = -50f;
+    private bool _usingGravity = true;
 
     // State Info
 
-    public Player_Timers stateMemory;
-    private Player_State currentState;
-    private bool SwappedThisFrame;
-    private bool hasHat = true;
-    private bool preventIdleSwap = false;
+    public Player_Timers StateMemory;
+    public State_Animation_Controller AnimationController;
+    public State_Context_Handler StateContext;
+    private bool _swappedThisFrame;
 
 
-    [DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
-    public float speedDebug;
+    //private bool _hasHat = true;
+    private bool _preventIdleSwap = false;
+
+    /// Variables I like really need
+    private Player_State _currentState;
+
+
+    //[DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
+    public float SpeedDebug;
 
     private void Awake()
     {
+        // Extentions
+        AnimationController = new State_Animation_Controller(GetComponentInChildren<Animator>());
+        StateContext = new State_Context_Handler(_groundMask);
+        StateMemory = new Player_Timers();
+
         // Get Components
-        marioHat = GameObject.Find("MarioHat").GetComponent<MarioHatCore>();
+        _marioHat = GameObject.Find("MarioHat").GetComponent<MarioHatCore>();
 
-        GroundCheck = GameObject.Find("GroundCheck").transform;
-
-        Character = GetComponent<CharacterController>();
-
-        Animator = GetComponentInChildren<Animator>();
-
-        Camera = GameObject.Find("Camera").transform;
-
-        // Create Instances
-
-        stateMemory = new Player_Timers();
-
-        currentState = new Player_Idle(this);
-        currentState.StartMethod();
-
-        InputController = new InputMaster();
-        InputController.Enable();
-
-        ClickController = new MouseTest();
-        ClickController.Enable();
+        _character = GetComponent<CharacterController>();
 
         // Initial Setup
-        Velocity = new Vector3(0f, -2f, 0f);
+
+        _currentState = new Player_Idle(this);
+        _currentState.StartMethod();
+
+        _velocity = new Vector3(0f, -2f, 0f);
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Confined;
     }
 
-
     private void Update()
     {
-        SwappedThisFrame = false;
+        _swappedThisFrame = false;
 
-        UpdatePlayerContext();
-
-        currentState.CheckForStateSwap();
+        _currentState.CheckStateSwaps();
 
         // If no inputs, default state is idle
-        if (isGrounded && !isPressingCrouch && !isPressingSpace && !isPressingWSAD && isIdle == false && preventIdleSwap == false)
+        if (StateContext.IsGrounded && !StateContext.IsCrouched && !StateContext.IsJumping && !StateContext.IsMoving && IsIdle == false && _preventIdleSwap == false)
         {
             SwapState(new Player_Idle(this));
-            isIdle = true;
+            IsIdle = true;
         }
-        currentState.UpdateMethod();
+
+        _currentState.UpdateMethod();
 
         UpdateMovePlayer();
     }
 
     private void UpdateMovePlayer()
     {
-        var TouchingGround = isGrounded && DisableGroundCheck == false;
+        var TouchingGround = StateContext.IsGrounded && DisableGroundCheck == false;
 
         if (TouchingGround)
         {
-            Velocity.y = -2f;
+            _velocity.y = -2f;
         }
         else
         {
             // Falling so increase gravity
 
-            float DeltaV = RateOfGravity * Time.deltaTime;
-            float GravityUpdate = currentState.GetUpdateToGravity();
+            float DeltaV = s_rateOfGravity * Time.deltaTime;
+            float GravityUpdate = _currentState.GetUpdateToGravity();
 
             if (GravityUpdate != 0) { DeltaV *= GravityUpdate; }
 
-            Velocity.y += DeltaV;
+            _velocity.y += DeltaV;
         }
 
-        if (UsingGravity)
+        if (_usingGravity)
         {
-            Character.Move(Velocity * Time.deltaTime);
+            _character.Move(_velocity * Time.deltaTime);
         }
     }
-
-    private void UpdatePlayerContext()
-    {
-        movementInput = InputController.Player.Movement.ReadValue<Vector2>().normalized;
-
-        isGrounded = Physics.CheckSphere(GroundCheck.position, GroundCheckDistance, GroundMask);
-        if (DisableGroundCheck == true)
-        {
-            isGrounded = false;
-        }
-
-        isPressingCrouch = InputController.Player.Crouch.ReadValue<float>() == 1f;
-        isPressingSpace = InputController.Player.Jump.ReadValue<float>() == 1f;
-        isPressingWSAD = movementInput.magnitude >= 0.2f;
-
-        hasClicked = ClickController.Mouse.MouseClick.ReadValue<float>() == 1f;
-
-        CameraRotation = Camera.eulerAngles;
-    }
-
     /// Helper Methods
 
     public void SwapState(Player_State input)
     {
-        if (SwappedThisFrame == false)
+        if (_swappedThisFrame == false)
         {
-            Animator.speed = 1;
-            currentState.ExitMethod();
-            currentState = input;
-            currentState.StartMethod();
-            SwappedThisFrame = true;
+            AnimationController.ChangeAnimationSpeed(1);
+            _currentState.ExitMethod();
+            _currentState = input;
+            _currentState.StartMethod();
+            _swappedThisFrame = true;
         }
-    }
-
-    public void ChangeAnimationSpeed(float speed)
-    {
-        Animator.speed = speed;
-    }
-
-    public void ChangeAnimationState(string animation, bool newState)
-    {
-        Animator.SetBool(animation, newState);
-    }
-
-    public bool CheckAnimationProgress(string name, float time)
-    {
-        if (Animator.GetCurrentAnimatorClipInfo(0)[0].clip.name == name)
-        {
-            return Animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= time && !Animator.IsInTransition(0);
-        }
-        return false;
     }
 
     public void MovePlayer(Vector3 direction, float speed)
     {
-        Character.Move(direction.normalized * speed * Time.deltaTime);
+        _character.Move(direction.normalized * speed * Time.deltaTime);
     }
 
     public void EnableGravity(bool state)
     {
-        UsingGravity = state;
+        _usingGravity = state;
     }
 
     public Vector3 GetVelocity()
     {
-        return Velocity;
+        return _velocity;
     }
 
     public void SetVerticalVelocity(float newYVelocity)
     {
-        Velocity = new Vector3(Velocity.x, newYVelocity, Velocity.z);
+        _velocity = new Vector3(_velocity.x, newYVelocity, _velocity.z);
     }
 
-    public bool getHasHat()
+    public bool GetPreventIdleSwap()
     {
-        return hasHat;
+        return _preventIdleSwap;
     }
 
-    public void setHasHat(bool value)
+    public void SetPreventIdleSwap(bool value)
     {
-        hasHat = value;
+        _preventIdleSwap = value;
     }
 
-    public bool getPreventIdleSwap()
+    public MarioHatCore GetMarioHatCore()
     {
-        return preventIdleSwap;
-    }
-
-    public void setPreventIdleSwap(bool value)
-    {
-        preventIdleSwap = value;
-    }
-
-    public MarioHatCore getMarioHatCore()
-    {
-        return marioHat;
+        return _marioHat;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Hat" && hasHat == false)
+        if (other.tag == "Hat" && StateContext.HasHat == false)
         {
-            onHat = true;
+            CollidingWithHat = true;
         }
     }
 
@@ -242,7 +172,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         if (other.tag == "Hat")
         {
-            onHat = false;
+            CollidingWithHat = false;
         }
     }
 }

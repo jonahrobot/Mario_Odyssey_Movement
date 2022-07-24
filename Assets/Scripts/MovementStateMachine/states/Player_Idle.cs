@@ -4,63 +4,57 @@ using UnityEngine;
 
 public class Player_Idle : Player_State
 {
-    PlayerStateMachineCore core;
-
     // Constants
     private float startTime;
     private bool AbleToJump;
 
-    public Player_Idle(PlayerStateMachineCore core)
+    public Player_Idle(PlayerStateMachineCore core) : base(core)
     {
-        this.core = core;
     }
     public override void StartMethod()
     {
         startTime = Time.time;
-        AbleToJump = core.stateMemory.GetBool("AbleToJump", false);
+        AbleToJump = core.StateMemory.GetBool("AbleToJump", false);
     }
 
     public override void UpdateMethod()
     {
-        if(core.isPressingSpace == false)
+        if(StateContext.IsJumping == false)
         {
             AbleToJump = true;
         }
 
         if(Time.time - startTime > 0.2f)
         {
-            core.stateMemory.StoreFloat("CurrentSpeed", 0f);
+            core.StateMemory.StoreFloat("CurrentSpeed", 0f);
             //core.stateMemory.StoreVector3("CurrentDirection", Vector3.zero);
         }
     }
-    public override float GetUpdateToGravity()
-    {
-        return 0;
-    }
+
     public override void ExitMethod()
     {
-        core.stateMemory.StoreBool("AbleToJump", AbleToJump);
-        core.isIdle = false;
+        core.StateMemory.StoreBool("AbleToJump", AbleToJump);
+        core.IsIdle = false;
     }
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.isPressingSpace && AbleToJump == true)
+        if (StateContext.IsJumping && AbleToJump == true)
         {
             AbleToJump = false;
             core.SwapState(new Player_Jumping(core));
             return;
         }
-        if (core.isPressingWSAD)
+        if (StateContext.IsMoving)
         {
             core.SwapState(new Player_Running(core));
             return;
         }
-        if (core.isPressingCrouch)
+        if (StateContext.IsCrouched)
         {
             core.SwapState(new Player_Crouch(core));
             return;
         }
-        if (core.hasClicked && core.getHasHat())
+        if (core.HasClicked && StateContext.HasHat)
         {
             core.SwapState(new Player_Hat_Throw(core));
             return;

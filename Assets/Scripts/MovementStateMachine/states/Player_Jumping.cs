@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class Player_Jumping : Player_State
 {
-    PlayerStateMachineCore core;
-
     // Movement
     private float CurrentJumpHeight = 0;
     private float GravityOnFall = 3.0f;
@@ -27,10 +25,8 @@ public class Player_Jumping : Player_State
     private float turnSmoothVelocity;
     private Vector2 Direction = Vector2.zero;
 
-    public Player_Jumping(PlayerStateMachineCore core)
+    public Player_Jumping(PlayerStateMachineCore core) : base(core)
     {
-        this.core = core;
-        data = core.stateMemory;
     }
 
     public override void StartMethod()
@@ -96,11 +92,11 @@ public class Player_Jumping : Player_State
         {
             case 0:
                 CurrentJumpHeight = 35f;
-                core.ChangeAnimationState("Jump_1", true);
+                AnimationController.ChangeAnimationState("Jump_1", true);
                 break;
             case 1:
                 CurrentJumpHeight = 37f;
-                core.ChangeAnimationState("Jump_2", true);
+                AnimationController.ChangeAnimationState("Jump_2", true);
                 break;
             case 2:
                 CurrentJumpHeight = 43f; 
@@ -127,28 +123,28 @@ public class Player_Jumping : Player_State
 
         MidAirStrafe();
 
-        if (core.isPressingWSAD == false)
+        if (StateContext.IsMoving == false)
         {
             data.StoreBool("StoppedMovingDuringJump", true);
         }
 
-        if(core.isPressingSpace == false)
+        if(StateContext.IsJumping == false)
         {
             data.StoreBool("AbleToJump", true);
         }
 
-        if (core.isGrounded == false)
+        if (StateContext.IsGrounded == false)
         {
             LeftGround = true;
         }
     }
     private void MidAirStrafe()
     {
-        core.speedDebug = CurrentSpeed;
-        if (core.isPressingWSAD == true)
+        core.SpeedDebug = CurrentSpeed;
+        if (StateContext.IsMoving == true)
         {
-            Direction = core.movementInput;
-            core.MovePlayer(GetCurrentDirection(core.movementInput), CurrentSpeed);
+            Direction = core.MovementInput;
+            core.MovePlayer(GetCurrentDirection(core.MovementInput), CurrentSpeed);
         }
         else
         {
@@ -175,7 +171,7 @@ public class Player_Jumping : Player_State
         bool JumpReachedApex = core.GetVelocity().y < CurrentJumpHeight / 2;
         bool JumpReachedShortApex = core.GetVelocity().y < CurrentJumpHeight * 0.75f;
 
-        if (JumpReachedApex == false && core.isPressingSpace == false && MaxJump == false)
+        if (JumpReachedApex == false && StateContext.IsJumping == false && MaxJump == false)
         {
             ReleasedJumpEarly = true;
         }
@@ -198,8 +194,8 @@ public class Player_Jumping : Player_State
     public override void ExitMethod()
     {
         // Stop Animations
-        core.ChangeAnimationState("Jump_1", false);
-        core.ChangeAnimationState("Jump_2", false);
+        AnimationController.ChangeAnimationState("Jump_1", false);
+        AnimationController.ChangeAnimationState("Jump_2", false);
 
         // Save Jump Time to keep track of the jump cooldown
         data.StoreFloat("TimeSinceLastJump", Time.time);
@@ -210,29 +206,29 @@ public class Player_Jumping : Player_State
 
     /// Helper Methods
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.isPressingCrouch && LongJumpDelay == false)
+        if (StateContext.IsCrouched && LongJumpDelay == false)
         {
             core.SwapState(new Player_GroundPound(core));
             return;
         }
-        if (core.isPressingCrouch && LongJumpDelay)
+        if (StateContext.IsCrouched && LongJumpDelay)
         {
             core.SwapState(new Player_Long_Jump(core));
             return;
         }
-        if (core.isGrounded && LeftGround)
+        if (StateContext.IsGrounded && LeftGround)
         {
             core.SwapState(new Player_Idle(core));
             return;
         }
-        if (core.hasClicked && core.getHasHat())
+        if (core.HasClicked && StateContext.HasHat)
         {
             core.SwapState(new Player_Hat_Throw(core));
             return;
         }
-        if (core.onHat)
+        if (core.CollidingWithHat)
         {
             core.SwapState(new Player_Jumping(core));
             return;

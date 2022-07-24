@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class Player_Running : Player_State
 {
-    PlayerStateMachineCore core;
-    Player_Timers data;
-
     // Movement
     private const float Acceleration = 0.5f;
     private const float Deceleration = -0.125f;
@@ -25,24 +22,22 @@ public class Player_Running : Player_State
     bool TriggeredJumpBuffer;
     float JumpBufferTimer;
 
-    public Player_Running(PlayerStateMachineCore core)
+    public Player_Running(PlayerStateMachineCore core) : base(core)
     {
-        this.core = core;
-        data = core.stateMemory;
     }
 
     public override void StartMethod()
     {
-        core.ChangeAnimationState("Run", true);
+        AnimationController.ChangeAnimationState("Run", true);
 
         AbleToJump = data.GetBool("AbleToJump", false);
         CurrentSpeed = Mathf.Min(data.GetFloat("CurrentSpeed", 0f), MaxSpeed);
 
         MaxSpeedOriginal = MaxSpeed;
-        core.speedDebug = CurrentSpeed;
+        core.SpeedDebug = CurrentSpeed;
 
         if (CurrentSpeed < MaxSpeed)
-            core.ChangeAnimationSpeed(2);
+            AnimationController.ChangeAnimationSpeed(2);
     }
 
     public override void UpdateMethod()
@@ -60,13 +55,13 @@ public class Player_Running : Player_State
         if (CurrentSpeed == MaxSpeed)
             Velocity = 0f;
 
-        if (core.isPressingWSAD)
+        if (StateContext.IsMoving)
         {
             RotatePlayer();
             core.MovePlayer(Direction, CurrentSpeed);
         }
 
-        if (core.isPressingSpace == false)
+        if (StateContext.IsJumping == false)
             AbleToJump = true;
 
         CoyoteTime();
@@ -79,14 +74,14 @@ public class Player_Running : Player_State
         if (Acceleration > 0)
         {
             CurrentSpeed = Mathf.Min(CurrentSpeed + Velocity, MaxSpeed);
-            core.ChangeAnimationSpeed(2 - CurrentSpeed / MaxSpeed);
+            AnimationController.ChangeAnimationSpeed(2 - CurrentSpeed / MaxSpeed);
         }
         else
         {
             CurrentSpeed = Mathf.Max(CurrentSpeed + Velocity, MaxSpeed);
         }
 
-        core.speedDebug = CurrentSpeed;
+        core.SpeedDebug = CurrentSpeed;
     }
 
     private Vector3 GetCurrentDirection()
@@ -127,7 +122,7 @@ public class Player_Running : Player_State
 
     private void CoyoteTime()
     {
-        bool JumpBufferStart = TriggeredJumpBuffer == false && core.isGrounded == false;
+        bool JumpBufferStart = TriggeredJumpBuffer == false && StateContext.IsGrounded == false;
 
         if (JumpBufferStart)
         {
@@ -143,52 +138,48 @@ public class Player_Running : Player_State
             JumpBufferOn = false;
         }
 
-        if (core.isGrounded)
+        if (StateContext.IsGrounded)
         {
             TriggeredJumpBuffer = false;
             JumpBufferOn = false;
         }
     }
 
-    public override float GetUpdateToGravity()
-    {
-        return 0;
-    }
 
     public override void ExitMethod()
     {
         data.StoreBool("AbleToJump", AbleToJump);
         data.StoreFloat("CurrentSpeed", CurrentSpeed);
         data.StoreVector3("CurrentDirection", Direction);
-        core.ChangeAnimationState("Run", false);
+        AnimationController.ChangeAnimationState("Run", false);
     }
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.isPressingCrouch && core.isGrounded)
+        if (StateContext.IsCrouched && StateContext.IsGrounded)
         {
             core.SwapState(new Player_Crouch(core));
             return;
         }
-        if (core.isPressingSpace && AbleToJump == true && (core.isGrounded || JumpBufferOn))
+        if (StateContext.IsJumping && AbleToJump == true && (StateContext.IsGrounded || JumpBufferOn))
         {
             AbleToJump = false;
             core.SwapState(new Player_Jumping(core));
             return;
         }
 
-        if (core.isPressingCrouch && core.isGrounded == false)
+        if (StateContext.IsCrouched && StateContext.IsGrounded == false)
         {
             core.SwapState(new Player_GroundPound(core));
             return;
         }
 
-        if (core.onHat)
+        if (core.CollidingWithHat)
         {
             core.SwapState(new Player_Jumping(core));
             return;
         }
-        if (core.hasClicked && core.getHasHat())
+        if (core.HasClicked && StateContext.HasHat)
         {
             core.SwapState(new Player_Hat_Throw(core));
             return;

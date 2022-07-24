@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Player_Long_Jump : Player_State
 {
-    PlayerStateMachineCore core;
 
     // Stats
     private float HorizontalSpeed = 30f;
@@ -13,14 +12,13 @@ public class Player_Long_Jump : Player_State
 
     private float turnSmoothVelocity;
 
-    public Player_Long_Jump(PlayerStateMachineCore core)
+    public Player_Long_Jump(PlayerStateMachineCore core):base(core)
     {
-        this.core = core;
     }
 
     public override void StartMethod()
     {
-        core.ChangeAnimationState("LongJump", true);
+        AnimationController.ChangeAnimationState("LongJump", true);
         core.SetVerticalVelocity(JumpVelocity);
 
         core.DisableGroundCheck = true;
@@ -47,7 +45,7 @@ public class Player_Long_Jump : Player_State
     // When Long Jumping, you shoot forward
     private void MoveForwards()
     {
-        float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float TargetAngle = Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
@@ -57,7 +55,7 @@ public class Player_Long_Jump : Player_State
         Vector3 AlignedDirection = AlignVectorToSlope(Direction, core.transform.position);
 
         // Save Direction for post Long Jump Roll
-        core.stateMemory.StoreVector3("LongJumpDirection", Direction);
+        core.StateMemory.StoreVector3("LongJumpDirection", Direction);
 
         bool GoingDownHill = AlignedDirection.y > 0.2f;
 
@@ -72,16 +70,16 @@ public class Player_Long_Jump : Player_State
 
     public override void ExitMethod()
     {
-        core.ChangeAnimationState("LongJump", false);
+        AnimationController.ChangeAnimationState("LongJump", false);
     }
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.isGrounded && !core.onHat)
+        if (StateContext.IsGrounded && !core.CollidingWithHat)
         {
-            if (core.isPressingCrouch)
+            if (StateContext.IsCrouched)
             {
-                if (core.isPressingSpace)
+                if (StateContext.IsJumping)
                 {
                     core.SwapState(new Player_Long_Jump(core));
                 }
@@ -96,7 +94,7 @@ public class Player_Long_Jump : Player_State
             }
         }
 
-        if (core.onHat)
+        if (core.CollidingWithHat)
         {
             core.SwapState(new Player_Jumping(core));
             return;

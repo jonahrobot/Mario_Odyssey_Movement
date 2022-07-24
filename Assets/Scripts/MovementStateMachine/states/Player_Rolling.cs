@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player_Rolling : Player_State
 {
-    PlayerStateMachineCore core;
+
 
     // Movement
     private float CurrentSpeed = 40f;
@@ -18,16 +18,15 @@ public class Player_Rolling : Player_State
     Vector3 TargetDirection;
     bool stopRoll;
 
-    public Player_Rolling(PlayerStateMachineCore core)
+    public Player_Rolling(PlayerStateMachineCore core) :base(core)
     {
-        this.core = core;
     }
 
     public override void StartMethod()
     {
-        core.ChangeAnimationState("Roll", true);
+        AnimationController.ChangeAnimationState("Roll", true);
 
-        CurrentDirection = core.stateMemory.GetVector3("LongJumpDirection", Vector3.zero);
+        CurrentDirection = core.StateMemory.GetVector3("LongJumpDirection", Vector3.zero);
         TargetDirection = CurrentDirection;
     }
 
@@ -125,35 +124,30 @@ public class Player_Rolling : Player_State
 
     public override void ExitMethod()
     {
-        core.ChangeAnimationState("Roll", false);
+        AnimationController.ChangeAnimationState("Roll", false);
     }
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.onHat)
+        if (core.CollidingWithHat)
         {
             core.SwapState(new Player_Jumping(core));
             return;
         }
-        if ((stopRoll || core.isPressingCrouch == false) && core.isPressingWSAD)
+        if ((stopRoll || StateContext.IsCrouched == false) && StateContext.IsMoving)
         {
             core.SwapState(new Player_Running(core));
             return;
         }
-        if ((stopRoll || core.isPressingCrouch == false) && !core.isPressingWSAD)
+        if ((stopRoll || StateContext.IsCrouched == false) && !StateContext.IsMoving)
         {
             core.SwapState(new Player_Idle(core));
             return;
         }
-        if (core.isPressingSpace)
+        if (StateContext.IsJumping)
         {
             core.SwapState(new Player_Long_Jump(core));
             return;
         }
-    }
-
-    public override float GetUpdateToGravity()
-    {
-        return 0;
     }
 }

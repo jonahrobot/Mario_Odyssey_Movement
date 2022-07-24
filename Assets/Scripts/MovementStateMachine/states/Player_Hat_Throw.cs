@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Player_Hat_Throw : Player_State
 {
-    PlayerStateMachineCore core;
 
     private bool hatThrown;
     private Vector3 defaultDirection;
@@ -13,41 +12,40 @@ public class Player_Hat_Throw : Player_State
 
     private float turnSmoothVelocity;
 
-    public Player_Hat_Throw(PlayerStateMachineCore core)
+    public Player_Hat_Throw(PlayerStateMachineCore core):base(core)
     {
-        this.core = core;
     }
 
     public override void StartMethod()
     {
-        defaultDirection = core.stateMemory.GetVector3("CurrentDirection",Vector3.zero);
+        defaultDirection = core.StateMemory.GetVector3("CurrentDirection",Vector3.zero);
 
-        core.ChangeAnimationSpeed(1f);
+        AnimationController.ChangeAnimationSpeed(1f);
 
-        if (core.isGrounded)
+        if (StateContext.IsGrounded)
         {
-            core.ChangeAnimationState("HatThrow", true);
+            AnimationController.ChangeAnimationState("HatThrow", true);
             AnimationName = "ThrowHat";
         }
         else
         {
-            core.ChangeAnimationState("HatThrowMidair", true);
+            AnimationController.ChangeAnimationState("HatThrowMidair", true);
             AnimationName = "Hat Throw Midair";
         }
-        core.getMarioHatCore().linkToArm();
+        core.GetMarioHatCore().linkToArm();
         core.EnableGravity(false);
-        core.setHasHat(false);
-        core.setPreventIdleSwap(true);
+        StateContext.HasHat = false;
+        core.SetPreventIdleSwap(true);
     }
 
     public override void UpdateMethod()
     {
-        if(hatThrown == false && core.CheckAnimationProgress(AnimationName, 0.5f))
+        if(hatThrown == false && AnimationController.CheckAnimationProgress(AnimationName, 0.5f))
         {
             Vector3 CurrentDirection;
-            if (core.isPressingWSAD)
+            if (StateContext.IsMoving)
             {
-                float TargetAngle = Mathf.Atan2(core.movementInput.x, core.movementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+                float TargetAngle = Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
                 float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
                 CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
 
@@ -58,37 +56,32 @@ public class Player_Hat_Throw : Player_State
                 CurrentDirection = defaultDirection;
             }
 
-            core.getMarioHatCore().startThrow(CurrentDirection);
+            core.GetMarioHatCore().startThrow(CurrentDirection);
             hatThrown = true;
         }
     }
 
-    public override float GetUpdateToGravity()
-    {
-        return 0f;
-    }
-
     public override void ExitMethod()
     {
-        core.ChangeAnimationState("HatThrow", false);
-        core.ChangeAnimationState("HatThrowMidair", false);
-        core.setPreventIdleSwap(false);
+        AnimationController.ChangeAnimationState("HatThrow", false);
+        AnimationController.ChangeAnimationState("HatThrowMidair", false);
+        core.SetPreventIdleSwap(false);
     }
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.CheckAnimationProgress(AnimationName, 1f))
+        if (AnimationController.CheckAnimationProgress(AnimationName, 1f))
         {
             falling = true;
             core.EnableGravity(true);
         }
 
-        if (falling && core.isPressingCrouch && core.isPressingSpace && core.isPressingWSAD)
+        if (falling && StateContext.IsCrouched && StateContext.IsJumping && StateContext.IsMoving)
         {
             core.SwapState(new Player_Long_Jump(core));
             return;
         }
 
-        if (falling && core.isGrounded)
+        if (falling && StateContext.IsGrounded)
         {
             core.SwapState(new Player_Idle(core));
             return;

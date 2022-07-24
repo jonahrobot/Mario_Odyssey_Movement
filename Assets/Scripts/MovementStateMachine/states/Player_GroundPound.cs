@@ -4,22 +4,20 @@ using UnityEngine;
 
 public class Player_GroundPound : Player_State
 {
-    PlayerStateMachineCore core;
 
     // Refrences
     private float StartTime;
     private bool HasFallen;
 
-    public Player_GroundPound(PlayerStateMachineCore core)
+    public Player_GroundPound(PlayerStateMachineCore core):base(core)
     {
-        this.core = core;
     }
 
     public override void StartMethod()
     {
         StartTime = Time.time;
 
-        core.ChangeAnimationState("GroundPound", true);
+        AnimationController.ChangeAnimationState("GroundPound", true);
         core.EnableGravity(false);
 
         core.DisableGroundCheck = false;
@@ -49,21 +47,21 @@ public class Player_GroundPound : Player_State
     {
 
         Debug.Log("Left GroundPound");
-        core.stateMemory.StoreFloat("GroundPoundExitTime", Time.time);
+        core.StateMemory.StoreFloat("GroundPoundExitTime", Time.time);
 
-        core.ChangeAnimationState("GroundPound", false);
+        AnimationController.ChangeAnimationState("GroundPound", false);
         core.EnableGravity(true);
     }
 
-    public override void CheckForStateSwap()
+    public override void CheckStateSwaps()
     {
-        if (core.onHat)
+        if (core.CollidingWithHat)
         {
             core.SwapState(new Player_Jumping(core));
             return;
         }
 
-        if (core.isGrounded)
+        if (StateContext.IsGrounded)
         {
             core.SwapState(new Player_Idle(core));
             return;
