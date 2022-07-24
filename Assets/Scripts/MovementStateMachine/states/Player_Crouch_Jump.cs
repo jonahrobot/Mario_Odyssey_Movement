@@ -19,7 +19,7 @@ public class Player_CrouchJump : Player_State
 
     public override void StartMethod()
     {
-        core.DisableGroundCheck = true;
+        StateContext.DisableGroundCheck = true;
 
         AnimationController.ChangeAnimationState("LongJump", true);
         core.SetVerticalVelocity(JumpVelocity);
@@ -56,7 +56,7 @@ public class Player_CrouchJump : Player_State
 
         if (JumpReachedApex)
         {
-            core.DisableGroundCheck = false;
+            StateContext.DisableGroundCheck = false;
             return FallMultiplier;
         }
 

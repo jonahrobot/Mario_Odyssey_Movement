@@ -19,7 +19,7 @@ public class State_Context_Handler : MonoBehaviour
 
     public bool HasHat;
 
-    private bool DisableGroundCheck;
+    public bool DisableGroundCheck;
 
     public State_Context_Handler(LayerMask groundMask)
     {

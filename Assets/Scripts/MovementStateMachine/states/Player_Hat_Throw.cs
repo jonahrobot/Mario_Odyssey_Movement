@@ -45,7 +45,7 @@ public class Player_Hat_Throw : Player_State
             Vector3 CurrentDirection;
             if (StateContext.IsMoving)
             {
-                float TargetAngle = Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+                float TargetAngle = Mathf.Atan2(StateContext.MovementInput.x, StateContext.MovementInput.y) * Mathf.Rad2Deg + StateContext.CameraRotation.y;
                 float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
                 CurrentDirection = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;
 

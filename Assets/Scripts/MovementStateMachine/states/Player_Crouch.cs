@@ -30,7 +30,7 @@ public class Player_Crouch : Player_State
 
     public override void UpdateMethod()
     {
-        Vector3 Direction = GetCurrentDirection(core.MovementInput);
+        Vector3 Direction = GetCurrentDirection(StateContext.MovementInput);
         Direction = AlignVectorToSlope(Direction, core.transform.position);
 
         if (!walking && StateContext.IsMoving && StoppedSlide)
@@ -68,7 +68,7 @@ public class Player_Crouch : Player_State
 
     private Vector3 GetCurrentDirection(Vector2 input)
     {
-        float TargetAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float TargetAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg + StateContext.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
         Vector3 Direction = Quaternion.Euler(0f, TargetAngle, 0f) * Vector3.forward;

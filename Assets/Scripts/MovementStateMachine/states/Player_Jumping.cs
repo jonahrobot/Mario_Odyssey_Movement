@@ -35,7 +35,7 @@ public class Player_Jumping : Player_State
         UpdateCurrentJumpState();
         StartInitialJumpAcceleration();
 
-        core.DisableGroundCheck = true;
+        StateContext.DisableGroundCheck = true;
     }
 
     private void GetConstants()
@@ -143,8 +143,8 @@ public class Player_Jumping : Player_State
         core.SpeedDebug = CurrentSpeed;
         if (StateContext.IsMoving == true)
         {
-            Direction = core.MovementInput;
-            core.MovePlayer(GetCurrentDirection(core.MovementInput), CurrentSpeed);
+            Direction = StateContext.MovementInput;
+            core.MovePlayer(GetCurrentDirection(StateContext.MovementInput), CurrentSpeed);
         }
         else
         {
@@ -156,7 +156,7 @@ public class Player_Jumping : Player_State
     }
     private Vector3 GetCurrentDirection(Vector2 Input)
     {
-        float TargetAngle = Mathf.Atan2(Input.x, Input.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float TargetAngle = Mathf.Atan2(Input.x, Input.y) * Mathf.Rad2Deg + StateContext.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);
@@ -178,13 +178,13 @@ public class Player_Jumping : Player_State
 
         if (JumpReachedShortApex && ReleasedJumpEarly == true && MaxJump == false)
         {
-            core.DisableGroundCheck = false;
+            StateContext.DisableGroundCheck = false;
             return GravityOnShortFall;
         }
 
         if (JumpReachedApex && ReleasedJumpEarly == false)
         {
-            core.DisableGroundCheck = false;
+            StateContext.DisableGroundCheck = false;
             return GravityOnFall;
         }
 
@@ -201,7 +201,7 @@ public class Player_Jumping : Player_State
         data.StoreFloat("TimeSinceLastJump", Time.time);
         //data.StoreFloat("CurrentSpeed", CurrentSpeed);
 
-        core.DisableGroundCheck = false;
+        StateContext.DisableGroundCheck = false;
     }
 
     /// Helper Methods
@@ -223,7 +223,7 @@ public class Player_Jumping : Player_State
             core.SwapState(new Player_Idle(core));
             return;
         }
-        if (core.HasClicked && StateContext.HasHat)
+        if (StateContext.HasClicked && StateContext.HasHat)
         {
             core.SwapState(new Player_Hat_Throw(core));
             return;

@@ -20,7 +20,7 @@ public class Player_GroundPound : Player_State
         AnimationController.ChangeAnimationState("GroundPound", true);
         core.EnableGravity(false);
 
-        core.DisableGroundCheck = false;
+        StateContext.DisableGroundCheck = false;
     }
 
     public override void UpdateMethod()

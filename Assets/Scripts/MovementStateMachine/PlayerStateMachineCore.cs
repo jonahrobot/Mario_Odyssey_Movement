@@ -6,15 +6,15 @@ using UnityEngine;
 public class PlayerStateMachineCore : MonoBehaviour
 {
     // Player Context
+    public Player_Timers StateMemory;
+    public State_Animation_Controller AnimationController;
+    public State_Context_Handler StateContext;
 
-    [HideInInspector] public bool DisableGroundCheck;
 
     [HideInInspector] public bool IsIdle;
-    [HideInInspector] public bool HasClicked;
+
     [HideInInspector] public bool CollidingWithHat;
 
-    [HideInInspector] public Vector2 MovementInput;
-    [HideInInspector] public Vector3 CameraRotation;
 
     // Component Refrences 
     private CharacterController _character;
@@ -29,9 +29,8 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     // State Info
 
-    public Player_Timers StateMemory;
-    public State_Animation_Controller AnimationController;
-    public State_Context_Handler StateContext;
+    
+
     private bool _swappedThisFrame;
 
 
@@ -74,7 +73,7 @@ public class PlayerStateMachineCore : MonoBehaviour
 
         _currentState.CheckStateSwaps();
 
-        // If no inputs, default state is idle
+        // Can be put into states
         if (StateContext.IsGrounded && !StateContext.IsCrouched && !StateContext.IsJumping && !StateContext.IsMoving && IsIdle == false && _preventIdleSwap == false)
         {
             SwapState(new Player_Idle(this));
@@ -88,7 +87,7 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void UpdateMovePlayer()
     {
-        var TouchingGround = StateContext.IsGrounded && DisableGroundCheck == false;
+        var TouchingGround = StateContext.IsGrounded && StateContext.DisableGroundCheck == false;
 
         if (TouchingGround)
         {

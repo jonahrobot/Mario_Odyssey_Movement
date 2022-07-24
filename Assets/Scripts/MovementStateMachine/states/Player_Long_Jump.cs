@@ -21,7 +21,7 @@ public class Player_Long_Jump : Player_State
         AnimationController.ChangeAnimationState("LongJump", true);
         core.SetVerticalVelocity(JumpVelocity);
 
-        core.DisableGroundCheck = true;
+        StateContext.DisableGroundCheck = true;
     }
 
     public override void UpdateMethod()
@@ -35,7 +35,7 @@ public class Player_Long_Jump : Player_State
 
         if (JumpReachedApex)
         {
-            core.DisableGroundCheck = false;
+            StateContext.DisableGroundCheck = false;
 
             return FallMultiplier;
         }
@@ -45,7 +45,7 @@ public class Player_Long_Jump : Player_State
     // When Long Jumping, you shoot forward
     private void MoveForwards()
     {
-        float TargetAngle = Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        float TargetAngle = Mathf.Atan2(StateContext.MovementInput.x, StateContext.MovementInput.y) * Mathf.Rad2Deg + StateContext.CameraRotation.y;
         float CurrentAngle = Mathf.SmoothDampAngle(core.transform.eulerAngles.y, TargetAngle, ref turnSmoothVelocity, 0.1f);
 
         core.transform.rotation = Quaternion.Euler(0f, CurrentAngle, 0f);

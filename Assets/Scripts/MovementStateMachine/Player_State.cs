@@ -41,6 +41,6 @@ public abstract class Player_State
 
     public float TargetAngleCameraRelative(PlayerStateMachineCore core)
     {
-        return Mathf.Atan2(core.MovementInput.x, core.MovementInput.y) * Mathf.Rad2Deg + core.CameraRotation.y;
+        return Mathf.Atan2(StateContext.MovementInput.x, StateContext.MovementInput.y) * Mathf.Rad2Deg + StateContext.CameraRotation.y;
     }
 }
