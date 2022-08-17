@@ -20,8 +20,7 @@ public class Player_Jumping : Player_State
     private bool StoppedMovingDuringJump;
     private bool LeftGround;
 
-    // Refrences
-    private Player_Timers data;
+    // RefrencesW
     private float turnSmoothVelocity;
     private Vector2 Direction = Vector2.zero;
 
@@ -34,7 +33,6 @@ public class Player_Jumping : Player_State
         GetConstants();
         UpdateCurrentJumpState();
         StartInitialJumpAcceleration();
-
         StateContext.DisableGroundCheck = true;
     }
 

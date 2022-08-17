@@ -10,7 +10,6 @@ public class PlayerStateMachineCore : MonoBehaviour
     public State_Animation_Controller AnimationController;
     public State_Context_Handler StateContext;
 
-
     [HideInInspector] public bool IsIdle;
 
     [HideInInspector] public bool CollidingWithHat;
@@ -47,8 +46,10 @@ public class PlayerStateMachineCore : MonoBehaviour
     private void Awake()
     {
         // Extentions
+        StateContext =  new State_Context_Handler(_groundMask);
+
         AnimationController = new State_Animation_Controller(GetComponentInChildren<Animator>());
-        StateContext = new State_Context_Handler(_groundMask);
+        
         StateMemory = new Player_Timers();
 
         // Get Components
@@ -69,6 +70,10 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log(_currentState);
+
+        StateContext.UpdateInputs();
+
         _swappedThisFrame = false;
 
         _currentState.CheckStateSwaps();

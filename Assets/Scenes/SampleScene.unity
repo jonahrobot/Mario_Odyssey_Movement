@@ -1622,7 +1622,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 782802899}
-  m_LocalRotation: {x: 0.072676614, y: -0.000000005252498, z: 2.8411246e-10, w: 0.9973556}
+  m_LocalRotation: {x: 0.072676614, y: 0.0000000052525, z: -2.8411257e-10, w: 0.9973556}
   m_LocalPosition: {x: 14.5, y: 15.927903, z: 35.29613}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -1816,7 +1816,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 900484391}
-  m_LocalRotation: {x: 0.058679923, y: -0.000000017705368, z: 0.000000001040743, w: 0.9982769}
+  m_LocalRotation: {x: 0.058679923, y: 0.000000017705375, z: -0.0000000010407435, w: 0.9982769}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1859,21 +1859,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da362fe2a77d1614eaf566fead36d586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DisableGroundCheck: 0
-  isPressingCrouch: 0
-  isPressingSpace: 0
-  isPressingWSAD: 0
-  isGrounded: 0
-  isIdle: 0
-  hasClicked: 0
-  onHat: 0
-  movementInput: {x: 0, y: 0}
-  CameraRotation: {x: 0, y: 0, z: 0}
-  GroundMask:
+  StateMemory: {fileID: 0}
+  AnimationController: {fileID: 0}
+  StateContext: {fileID: 0}
+  IsIdle: 0
+  CollidingWithHat: 0
+  _groundMask:
     serializedVersion: 2
     m_Bits: 8
-  stateMemory: {fileID: 0}
-  speedDebug: 0
+  SpeedDebug: 0
 --- !u!136 &910455866
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2691,7 +2685,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1409638769}
-  m_LocalRotation: {x: 0.09987388, y: 0.00000001133921, z: -0.0000000011381815, w: 0.9950001}
+  m_LocalRotation: {x: 0.09987387, y: 0.0000000048172764, z: -4.8353777e-10, w: 0.9950001}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:

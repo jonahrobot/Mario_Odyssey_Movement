@@ -179,6 +179,7 @@ public class Player_Running : Player_State
             core.SwapState(new Player_Jumping(core));
             return;
         }
+
         if (StateContext.HasClicked && StateContext.HasHat)
         {
             core.SwapState(new Player_Hat_Throw(core));
