@@ -2,46 +2,56 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-//[RequireComponent] should add!
 public class PlayerStateMachineCore : MonoBehaviour
 {
-    // Player Context
-    public Player_Timers StateMemory;
-    public State_Animation_Controller AnimationController;
-    public State_Context_Handler StateContext;
 
-    [HideInInspector] public bool IsIdle;
 
-    [HideInInspector] public bool CollidingWithHat;
+    // PUBLIC VARIABLES  -------------------------------------------------------------------------
 
+    // Movement
+    [Header("Jump")]
+    public float gravityOnFall = 3.0f;
+    public float gravityOnShortFall = 4.0f;
+    public float[] JumpHeights = { 35f, 37f, 43f };
+
+    public float s_rateOfGravity = -50f;
+
+    [Header("Environment")]
+    [SerializeField] private LayerMask _groundMask;
+
+
+    // PRIVATE / HIDDEN VARIABLES -------------------------------------------------------------------------
+
+
+    // Parts of State Machine
+    [HideInInspector] public Player_Timers StateMemory;
+    [HideInInspector] public State_Animation_Controller AnimationController;
+    [HideInInspector] public State_Context_Handler StateContext;
 
     // Component Refrences 
     private CharacterController _character;
     private MarioHatCore _marioHat;
-    [SerializeField] private LayerMask _groundMask;
 
-    // Movement Stats
-
+    // Movement Information
     private Vector3 _velocity;
-    private static float s_rateOfGravity = -50f;
     private bool _usingGravity = true;
 
-    // State Info
-
-    
-
+    // General State Information
+    private Player_State _currentState;
+    [HideInInspector] public bool IsIdle;
+    [HideInInspector] public bool CollidingWithHat;
     private bool _swappedThisFrame;
-
-
-    //private bool _hasHat = true;
     private bool _preventIdleSwap = false;
 
-    /// Variables I like really need
-    private Player_State _currentState;
+
+    // GRAPH DEBUG VARIABLES -------------------------------------------------------------------------
 
 
     //[DebugGUIGraph(min: 0, max: 30, r: 1, g: 0, b: 0, autoScale: false)]
-    public float SpeedDebug;
+    [HideInInspector] public float SpeedDebug;
+
+
+    // Scripts -------------------------------------------------------------------------
 
     private void Awake()
     {
@@ -58,7 +68,6 @@ public class PlayerStateMachineCore : MonoBehaviour
         _character = GetComponent<CharacterController>();
 
         // Initial Setup
-
         _currentState = new Player_Idle(this);
         _currentState.StartMethod();
 
@@ -72,24 +81,37 @@ public class PlayerStateMachineCore : MonoBehaviour
     {
         Debug.Log(_currentState);
 
+        // Get Current User Inputs
         StateContext.UpdateInputs();
 
         _swappedThisFrame = false;
 
+        /*
+         * Swap states if conditions met
+         * 
+         * Example: IDLE state, user presses space, now swap to JUMP state
+         */
         _currentState.CheckStateSwaps();
 
-        // Can be put into states
+        /*
+         * Check if idle state conditions met
+         * Placed here as all states have idle option
+         */
         if (StateContext.IsGrounded && !StateContext.IsCrouched && !StateContext.IsJumping && !StateContext.IsMoving && IsIdle == false && _preventIdleSwap == false)
         {
             SwapState(new Player_Idle(this));
             IsIdle = true;
         }
 
+        // Preform current states update method
         _currentState.UpdateMethod();
 
+        // Move Player
         UpdateMovePlayer();
     }
 
+    // Handles players vertical velocity movement
+    // Includes gravity and whatever current states (GetUpdateToGravity alteration)
     private void UpdateMovePlayer()
     {
         var TouchingGround = StateContext.IsGrounded && StateContext.DisableGroundCheck == false;
@@ -115,8 +137,17 @@ public class PlayerStateMachineCore : MonoBehaviour
             _character.Move(_velocity * Time.deltaTime);
         }
     }
+
+
     /// Helper Methods
 
+    /*
+     * Swap current state to "input" state
+     * 
+     * Params
+     *  - Player_State input - The new state that will be swapped in for the old state
+     *  
+     */
     public void SwapState(Player_State input)
     {
         if (_swappedThisFrame == false)
@@ -129,6 +160,14 @@ public class PlayerStateMachineCore : MonoBehaviour
         }
     }
 
+    /*
+     * Move players character controller by a direction and speed, framerate relative
+     * 
+     * Params
+     *  - Vector3 direction - Direction to move player
+     *  - float speed       - speed of player movement
+     * 
+     */
     public void MovePlayer(Vector3 direction, float speed)
     {
         _character.Move(direction.normalized * speed * Time.deltaTime);

@@ -4,8 +4,9 @@ public class Player_Jumping : Player_State
 {
     // Movement
     private float CurrentJumpHeight = 0;
-    private float GravityOnFall = 3.0f;
-    private float GravityOnShortFall = 4.0f;
+    private float GravityOnFall;
+    private float GravityOnShortFall;
+    private float[] JumpHeight;
 
     private float CurrentSpeed;
 
@@ -26,6 +27,9 @@ public class Player_Jumping : Player_State
 
     public Player_Jumping(PlayerStateMachineCore core) : base(core)
     {
+        GravityOnFall = core.gravityOnFall;
+        GravityOnShortFall = core.gravityOnShortFall;
+        JumpHeight = core.JumpHeights;
     }
 
     public override void StartMethod()
@@ -89,15 +93,15 @@ public class Player_Jumping : Player_State
         switch (CurrentJumpState)
         {
             case 0:
-                CurrentJumpHeight = 35f;
+                CurrentJumpHeight = JumpHeight[0];
                 AnimationController.ChangeAnimationState("Jump_1", true);
                 break;
             case 1:
-                CurrentJumpHeight = 37f;
+                CurrentJumpHeight = JumpHeight[1];
                 AnimationController.ChangeAnimationState("Jump_2", true);
                 break;
             case 2:
-                CurrentJumpHeight = 43f; 
+                CurrentJumpHeight = JumpHeight[2]; 
                 break;
         }
 
