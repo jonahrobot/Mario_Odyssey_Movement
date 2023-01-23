@@ -6,14 +6,17 @@ public class Player_Long_Jump : Player_State
 {
 
     // Stats
-    private float HorizontalSpeed = 30f;
-    private float JumpVelocity = 15f;
-    private float FallMultiplier = 3.0f;
+    private float HorizontalSpeed;
+    private float JumpVelocity;
+    private float FallMultiplier;
 
     private float turnSmoothVelocity;
 
     public Player_Long_Jump(PlayerStateMachineCore core):base(core)
     {
+         HorizontalSpeed = core.HorizontalSpeed;
+         JumpVelocity = core.LongJumpVelocity;
+         FallMultiplier = core.LongFallMultiplier;
     }
 
     public override void StartMethod()

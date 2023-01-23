@@ -20,6 +20,10 @@ public class Player_Rolling : Player_State
 
     public Player_Rolling(PlayerStateMachineCore core) :base(core)
     {
+             CurrentSpeed = core.CurrentSpeed;
+             MaxSpeed = core.MaxRollSpeed;
+             SprintAcceleration = core.SprintAcceleration;
+             SlowDownStart = core.SlowDownStart;
     }
 
     public override void StartMethod()

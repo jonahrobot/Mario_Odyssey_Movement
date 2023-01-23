@@ -10,11 +10,37 @@ public class PlayerStateMachineCore : MonoBehaviour
 
     // Movement
     [Header("Jump")]
+    public float baseJumpHorzSpeed = 5f;
+    public float[] JumpHeights = { 35f, 37f, 43f };
     public float gravityOnFall = 3.0f;
     public float gravityOnShortFall = 4.0f;
-    public float[] JumpHeights = { 35f, 37f, 43f };
 
-    public float s_rateOfGravity = -50f;
+    [Header("Running")]
+    public float Acceleration = 0.5f;
+    public float Deceleration = -0.125f;
+    public float MaxSpeed = 20f;
+
+    [Header("Crouching")]
+    public float CrouchSpeed = 5f;
+
+    [Header("Crouch Jumping")]
+    public float JumpVelocity = 43f;
+    public float FallMultiplier = 4.0f;
+    public float Speed = 5f;
+
+    [Header("Long Jump")]
+    public float HorizontalSpeed = 30f;
+    public float LongJumpVelocity = 15f;
+    public float LongFallMultiplier = 3.0f;
+
+    [Header("Roll")]
+    public float CurrentSpeed = 40f;
+    public float MaxRollSpeed = 50f;
+    public float SprintAcceleration = 1.0025f;
+    public float SlowDownStart = 0.0225f;
+
+    [Header("Base Stats")]
+    public float rateOfGravity = -50f;
 
     [Header("Environment")]
     [SerializeField] private LayerMask _groundMask;
@@ -56,7 +82,7 @@ public class PlayerStateMachineCore : MonoBehaviour
     private void Awake()
     {
         // Extentions
-        StateContext =  new State_Context_Handler(_groundMask);
+        StateContext = new State_Context_Handler(_groundMask);
 
         AnimationController = new State_Animation_Controller(GetComponentInChildren<Animator>());
         
@@ -124,7 +150,7 @@ public class PlayerStateMachineCore : MonoBehaviour
         {
             // Falling so increase gravity
 
-            float DeltaV = s_rateOfGravity * Time.deltaTime;
+            float DeltaV = rateOfGravity * Time.deltaTime;
             float GravityUpdate = _currentState.GetUpdateToGravity();
 
             if (GravityUpdate != 0) { DeltaV *= GravityUpdate; }

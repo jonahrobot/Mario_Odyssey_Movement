@@ -15,7 +15,10 @@ public class Player_CrouchJump : Player_State
 
     public Player_CrouchJump(PlayerStateMachineCore core):base(core)
     {
-    }
+            JumpVelocity = core.JumpVelocity;
+            FallMultiplier = core.FallMultiplier;
+            Speed = core.Speed;
+}
 
     public override void StartMethod()
     {

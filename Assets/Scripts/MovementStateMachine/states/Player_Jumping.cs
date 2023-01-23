@@ -9,6 +9,8 @@ public class Player_Jumping : Player_State
     private float[] JumpHeight;
 
     private float CurrentSpeed;
+    private float MaxSpeed;
+    private float baseJumpHorzSpeed;
 
     // States of Jump
     private bool ReleasedJumpEarly = false;
@@ -30,6 +32,8 @@ public class Player_Jumping : Player_State
         GravityOnFall = core.gravityOnFall;
         GravityOnShortFall = core.gravityOnShortFall;
         JumpHeight = core.JumpHeights;
+        MaxSpeed = core.MaxSpeed;
+        baseJumpHorzSpeed = core.baseJumpHorzSpeed;
     }
 
     public override void StartMethod()
@@ -44,7 +48,12 @@ public class Player_Jumping : Player_State
     {
         CurrentJumpState = data.GetFloat("CurrentJumpState", 0);
 
-        CurrentSpeed = Mathf.Max(20f,data.GetFloat("CurrentSpeed", 20f) + 5f);
+        CurrentSpeed = data.GetFloat("CurrentSpeed", baseJumpHorzSpeed);
+        if (CurrentSpeed < baseJumpHorzSpeed)
+        {
+            CurrentSpeed = baseJumpHorzSpeed;
+        }
+        //CurrentSpeed = Mathf.Max(MaxSpeed, data.GetFloat("CurrentSpeed", MaxSpeed) + 2f);
 
         StoppedMovingDuringJump = data.GetBool("StoppedMovingDuringJump", false);
     }

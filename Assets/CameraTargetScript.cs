@@ -16,6 +16,8 @@ public class CameraTargetScript : MonoBehaviour
     bool DidLeaveGroundAction;
     Vector3 vel;
 
+    bool StartTrackingCamera = false;
+
     private void Start()
     {
         mainCamera = GameObject.Find("Camera").GetComponent<Camera>();
@@ -29,24 +31,42 @@ public class CameraTargetScript : MonoBehaviour
         if (_stateContext.IsGrounded == false && DidLeaveGroundAction == false)
         {
             DidLeaveGroundAction = true;
-            yPosition = PlayerMesh.position.y;
         }
 
     }
 
     private void LateUpdate()
     {
-        Vector3 characterViewPosition = mainCamera.WorldToViewportPoint(PlayerMesh.position);
-
-        if (characterViewPosition.y > 0.95f || characterViewPosition.y < 0.3f)
+        // Only follow player if on ground
+        if (_stateContext.IsGrounded)
         {
-            yPosition = PlayerMesh.position.y;
-        }else if (_stateContext.IsGrounded)
-        {
-            DidLeaveGroundAction = false;
-            yPosition = PlayerMesh.position.y;
+            // If not recovering from Jump, follow exact
+            if (DidLeaveGroundAction == false)
+            {
+                transform.position = PlayerMesh.position;
+            }
+            else
+            {
+                // Recovering from jump
+                transform.position = Vector3.SmoothDamp(transform.position, PlayerMesh.position, ref vel, 0.125f);
+                if (Vector3.Distance(transform.position, PlayerMesh.position) < 0.025)
+                {
+                    DidLeaveGroundAction = false;
+                }
+            }
         }
-        var desiredPosition = new Vector3(PlayerMesh.position.x, yPosition, PlayerMesh.position.z);
-        transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref vel, 0.25f);
+   
+        // Check if moving through air
+        if(_stateContext.IsGrounded == false && _stateContext.IsMoving)
+        {
+            // Should follow Lightly
+            var desiredPosition = new Vector3(PlayerMesh.position.x, transform.position.y, PlayerMesh.position.z);
+            transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref vel, 0.25f);
+            if (Vector3.Distance(transform.position, PlayerMesh.position) < 0.025)
+            {
+                DidLeaveGroundAction = false;
+            }
+        }
+      
     }
 }

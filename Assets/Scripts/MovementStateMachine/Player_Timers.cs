@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Black board Object! 
-public class Player_Timers : MonoBehaviour
+public class Player_Timers : ScriptableObject
 {
 
     // Dictonary 

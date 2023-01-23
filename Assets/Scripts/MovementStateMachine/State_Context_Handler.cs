@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class State_Context_Handler : MonoBehaviour
+public class State_Context_Handler : ScriptableObject
 {
     private InputMaster _inputController;
     private LayerMask _groundMask;

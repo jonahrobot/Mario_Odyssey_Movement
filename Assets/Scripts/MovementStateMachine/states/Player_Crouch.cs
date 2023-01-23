@@ -8,7 +8,7 @@ public class Player_Crouch : Player_State
     // Movement
     private float CurrentSpeed;
     private Vector3 CurrentDirection;
-    private float CrouchSpeed = 5f;
+    private float CrouchSpeed;
     private bool  walking;
     private bool StoppedSlide = false;
 
@@ -18,6 +18,7 @@ public class Player_Crouch : Player_State
 
     public Player_Crouch(PlayerStateMachineCore core) :base(core)
     {
+        CrouchSpeed = core.CrouchSpeed;
     }
 
     public override void StartMethod()

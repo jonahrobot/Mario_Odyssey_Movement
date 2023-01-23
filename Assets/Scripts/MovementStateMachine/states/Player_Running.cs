@@ -3,10 +3,10 @@ using UnityEngine;
 public class Player_Running : Player_State
 {
     // Movement
-    private const float Acceleration = 0.5f;
-    private const float Deceleration = -0.125f;
+    private float Acceleration;
+    private float Deceleration;
 
-    private float MaxSpeed = 20f;
+    private float MaxSpeed;
 
     Vector3 Direction;
 
@@ -24,6 +24,9 @@ public class Player_Running : Player_State
 
     public Player_Running(PlayerStateMachineCore core) : base(core)
     {
+        Acceleration = core.Acceleration;
+        Deceleration = core.Deceleration; 
+        MaxSpeed = core.MaxSpeed; 
     }
 
     public override void StartMethod()
