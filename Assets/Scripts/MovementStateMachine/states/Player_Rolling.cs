@@ -87,12 +87,12 @@ public class Player_Rolling : Player_State
         {
             CurrentSpeed = Mathf.Clamp(CurrentSpeed - SlowDownStart, 0, 100);
 
-            if (CurrentSpeed < 5)
+            if (CurrentSpeed < 15)
             {
                 SlowDownStart = 0.2125f;
                 TargetDirection = FindDirectionDownHill(core.transform.position);
                 
-                CurrentSpeed = 5f;
+                CurrentSpeed = 25f;
             }
         }
 
@@ -102,7 +102,7 @@ public class Player_Rolling : Player_State
         {
             CurrentSpeed = Mathf.Clamp(CurrentSpeed - SlowDownStart, 0, 100);
 
-            if (CurrentSpeed < 5)
+            if (CurrentSpeed < 1)
             {
                 stopRoll = true;
             }

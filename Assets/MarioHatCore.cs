@@ -14,10 +14,10 @@ public class MarioHatCore : MonoBehaviour
     private enum throwState{IDLE,THROW,RETURN,TRANSITION,ONARM};
     private throwState currentState = throwState.IDLE;
 
-    private float defaultVelocity = 20f;
+    private float defaultVelocity = 40f;
     private float maxVelocity = 50f;
-    private float acceleration = 5f;
-    private float hangTime = 1f;
+    private float acceleration = 7f;
+    private float hangTime = 3f;
     private Vector3 targetSize;
     private bool Heatseaking;
 
@@ -38,7 +38,7 @@ public class MarioHatCore : MonoBehaviour
     public void startThrow(Vector3 direction)
     {
         collider.enabled = true;
-        target = transform.position + direction * 14f;
+        target = transform.position + direction * 22f;
         Heatseaking = false;
         velocity = defaultVelocity;
 
