@@ -148,7 +148,9 @@ public class GoombaMovment : MonoBehaviour
     {
         agent.SetDestination(player.position);
 
-        transform.LookAt(player);
+        Vector3 newtarget = player.position;
+        newtarget.y = transform.position.y;
+        transform.LookAt(newtarget);
 
         if (!alreadyAttacked)
         {

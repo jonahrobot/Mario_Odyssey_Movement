@@ -110,7 +110,8 @@ public class Player_Jumping : Player_State
                 AnimationController.ChangeAnimationState("Jump_2", true);
                 break;
             case 2:
-                CurrentJumpHeight = JumpHeight[2]; 
+                CurrentJumpHeight = JumpHeight[2];
+                AnimationController.ChangeAnimationState("Roll", true);
                 break;
         }
 
@@ -207,6 +208,7 @@ public class Player_Jumping : Player_State
         // Stop Animations
         AnimationController.ChangeAnimationState("Jump_1", false);
         AnimationController.ChangeAnimationState("Jump_2", false);
+        AnimationController.ChangeAnimationState("Roll", false);
 
         // Save Jump Time to keep track of the jump cooldown
         data.StoreFloat("TimeSinceLastJump", Time.time);

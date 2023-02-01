@@ -47,7 +47,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agent: {fileID: 1485141611689521747}
-  player: {fileID: 0}
   whatIsGround:
     serializedVersion: 2
     m_Bits: 8
@@ -58,7 +57,7 @@ MonoBehaviour:
   walkPointRange: 5
   timeBetweenAttacks: 0.5
   sightRange: 20
-  attackRange: 1
+  attackRange: 4
   playerInSightRange: 0
   playerInAttackRange: 0
 --- !u!195 &1485141611689521747
@@ -94,8 +93,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 6.84, y: 2.59, z: 4.8}
-  m_Center: {x: 0, y: 6.32, z: 0}
+  m_Size: {x: 8, y: 8, z: 4.8}
+  m_Center: {x: 0, y: 3.39, z: 0}
 --- !u!1001 &1485141611852005802
 PrefabInstance:
   m_ObjectHideFlags: 0
